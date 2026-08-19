@@ -14,16 +14,16 @@ app.use(express.json());
 app.use(cors());
 app.use(cookieParser());
 
-app.use('/api/auth',authRoutes);
-app.use('/api/user',userRoutes);
-app.use('/api/ai',aiRoutes);
-app.use('/api/dishes',dishRoutes);
-app.use('/api/stats',statRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/user', userRoutes);
+app.use('/api/ai', aiRoutes);
+app.use('/api/dishes', dishRoutes);
+app.use('/api/stats', statRoutes);
 
-app.get('/health',(req,res)=>{
+app.get('/health', (req, res) => {
     res.status(200).json({
         "status": 'OK',
-        "message":"Server is Healthy!!"
+        "message": "Health Mode On!!"
     })
 })
 export default app;
