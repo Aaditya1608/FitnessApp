@@ -1,7 +1,8 @@
 import { AuthProvider, useAuth } from '../context/AuthContext';
+import { ThemeProvider as AppThemeProvider, useAppTheme } from '../context/ThemeContext';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { ActivityIndicator, View, useColorScheme } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
 import { useEffect } from 'react';
 
@@ -9,7 +10,7 @@ SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
   const { user, isLoading, hasDetails } = useAuth();
-  const colorScheme = useColorScheme();
+  const { colorScheme } = useAppTheme();
   const segments = useSegments();
   const router = useRouter();
 
@@ -61,8 +62,11 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <RootLayoutNav />
-    </AuthProvider>
+    <AppThemeProvider>
+      <AuthProvider>
+        <RootLayoutNav />
+      </AuthProvider>
+    </AppThemeProvider>
   );
 }
+

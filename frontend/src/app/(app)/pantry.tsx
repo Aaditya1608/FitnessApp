@@ -80,11 +80,18 @@ export default function PantryScreen() {
 
   const handleSaveDish = async (dish: Dish, index: number) => {
     const actionKey = `save_${index}`;
-    if (actionLoading[actionKey]) return;
+    if (actionLoading[actionKey] || dish.isSaved) return;
 
     setActionLoading(prev => ({ ...prev, [actionKey]: true }));
     try {
       await saveDish(dish);
+      
+      // Update local state and AsyncStorage
+      const updatedDishes = [...dishes];
+      updatedDishes[index].isSaved = true;
+      setDishes(updatedDishes);
+      await AsyncStorage.setItem(PANTRY_STORAGE_KEY, JSON.stringify(updatedDishes));
+      
       Alert.alert('Success', 'Dish saved successfully!');
     } catch (err: any) {
       Alert.alert('Save Failed', err.message || 'Failed to save dish.');
@@ -112,7 +119,6 @@ export default function PantryScreen() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>Pantry</Text>
-        <Text style={styles.description}>Enter what you have, and AI will generate 3 dishes!</Text>
 
         <View style={styles.inputContainer}>
           <TextInput
@@ -176,11 +182,17 @@ export default function PantryScreen() {
 
             <View style={styles.actionButtonsContainer}>
               <TouchableOpacity 
-                style={[styles.actionButton, styles.saveButton]} 
+                style={[styles.actionButton, styles.saveButton, dish.isSaved && styles.saveButtonDisabled]} 
                 onPress={() => handleSaveDish(dish, index)}
-                disabled={actionLoading[`save_${index}`]}
+                disabled={actionLoading[`save_${index}`] || dish.isSaved}
               >
-                {actionLoading[`save_${index}`] ? <ActivityIndicator size="small" color="#000" /> : <Text style={styles.saveButtonText}>Save</Text>}
+                {actionLoading[`save_${index}`] ? (
+                  <ActivityIndicator size="small" color="#000" />
+                ) : (
+                  <Text style={[styles.saveButtonText, dish.isSaved && styles.saveButtonTextDisabled]}>
+                    {dish.isSaved ? '✓ Saved' : 'Save'}
+                  </Text>
+                )}
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[styles.actionButton, styles.logButton]} 
@@ -209,13 +221,8 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: Spacing.one,
+    marginBottom: Spacing.three,
     color: '#000',
-  },
-  description: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: Spacing.four,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -350,9 +357,16 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
     marginRight: 8,
   },
+  saveButtonDisabled: {
+    backgroundColor: '#f5f5f5',
+    borderColor: '#eee',
+  },
   saveButtonText: {
     color: '#000',
     fontWeight: '600',
+  },
+  saveButtonTextDisabled: {
+    color: '#999',
   },
   logButton: {
     backgroundColor: '#000',

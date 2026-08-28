@@ -19,6 +19,7 @@ export interface Dish {
   ingredients: Ingredient[];
   macros: Macros;
   prep_time: number;
+  isSaved?: boolean;
 }
 
 export const generateDishes = async (ingredients: string[]): Promise<{ success: boolean; data: Dish[], message?: string }> => {
@@ -37,4 +38,27 @@ export const logDish = async (dish: Dish) => {
   return apiClient('/api/dishes/log', {
     data: dish,
   });
+};
+
+export interface GetSavedDishesFilters {
+  ingredient?: string;
+  maxPrepTime?: number;
+  minProtein?: number;
+  maxCalories?: number;
+}
+
+export const getSavedDishes = async (filters?: GetSavedDishesFilters): Promise<{ count: number; savedDishes: Dish[] }> => {
+  const queryParams = new URLSearchParams();
+
+  if (filters) {
+    if (filters.ingredient) queryParams.append('ingredient', filters.ingredient);
+    if (filters.maxPrepTime !== undefined && !isNaN(filters.maxPrepTime)) queryParams.append('maxPrepTime', filters.maxPrepTime.toString());
+    if (filters.minProtein !== undefined && !isNaN(filters.minProtein)) queryParams.append('minProtein', filters.minProtein.toString());
+    if (filters.maxCalories !== undefined && !isNaN(filters.maxCalories)) queryParams.append('maxCalories', filters.maxCalories.toString());
+  }
+
+  const queryString = queryParams.toString();
+  const endpoint = queryString ? `/api/dishes/saved?${queryString}` : '/api/dishes/saved';
+
+  return apiClient(endpoint);
 };

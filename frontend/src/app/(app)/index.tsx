@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { StyleSheet, View, Text, ScrollView, ActivityIndicator, TouchableOpacity, Alert, PanResponder } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, ActivityIndicator, TouchableOpacity, Alert, PanResponder, Modal, KeyboardAvoidingView, Platform, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Spacing } from '@/constants/theme';
 import { statsApi } from '@/api/stats';
+import { aiApi } from '@/api/ai';
 import { useAuth } from '@/context/AuthContext';
 import { useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -36,9 +37,40 @@ export default function StatsScreen() {
   const [monthlyDataCache, setMonthlyDataCache] = useState<Record<string, any[]>>({});
   const [isLoadingMonthly, setIsLoadingMonthly] = useState(false);
   
+  // Custom Dish state
+  const [isCustomDishModalVisible, setIsCustomDishModalVisible] = useState(false);
+  const [customTitle, setCustomTitle] = useState('');
+  const [customIngredients, setCustomIngredients] = useState([{ name: '', amount: '' }]);
+  const [customRecipeText, setCustomRecipeText] = useState('');
+  const [isSubmittingDish, setIsSubmittingDish] = useState(false);
+
+  
+  const focusStateRef = useRef({ chartEndDate, mode, currentMonth });
+  useEffect(() => {
+    focusStateRef.current = { chartEndDate, mode, currentMonth };
+  }, [chartEndDate, mode, currentMonth]);
+
   useFocusEffect(
     useCallback(() => {
       fetchTodayStats();
+      
+      const { chartEndDate: end, mode: currentMode, currentMonth: cMonth } = focusStateRef.current;
+      
+      if (currentMode === 'dashboard') {
+        const endDate = new Date(end);
+        const startDate = new Date(endDate);
+        startDate.setDate(startDate.getDate() - 6);
+        
+        const m1 = { year: startDate.getFullYear(), month: startDate.getMonth() + 1 };
+        const m2 = { year: endDate.getFullYear(), month: endDate.getMonth() + 1 };
+        
+        fetchMonthlyData(m1.year, m1.month, true);
+        if (m1.year !== m2.year || m1.month !== m2.month) {
+          fetchMonthlyData(m2.year, m2.month, true);
+        }
+      } else {
+        fetchMonthlyData(cMonth.year, cMonth.month, true);
+      }
     }, [])
   );
   
@@ -225,6 +257,73 @@ export default function StatsScreen() {
     return days;
   }, [currentMonth, monthlyDataCache]);
 
+  // Custom Dish Functions
+  const handleAddIngredient = () => {
+    setCustomIngredients([...customIngredients, { name: '', amount: '' }]);
+  };
+
+  const handleUpdateIngredient = (index: number, field: 'name' | 'amount', value: string) => {
+    const updated = [...customIngredients];
+    updated[index][field] = value;
+    setCustomIngredients(updated);
+  };
+
+  const handlePostDish = async () => {
+    const title = customTitle.trim();
+    if (!title) {
+      Alert.alert('Validation Error', 'Please enter a title for the dish.');
+      return;
+    }
+
+    const ingredientsObj: Record<string, string> = {};
+    for (const item of customIngredients) {
+      const name = item.name.trim();
+      const amount = item.amount.trim();
+      if (name && amount) {
+        ingredientsObj[name] = amount;
+      } else if (name || amount) {
+        Alert.alert('Validation Error', 'Please provide both name and amount for all ingredients, or leave empty rows completely blank.');
+        return;
+      }
+    }
+
+    if (Object.keys(ingredientsObj).length === 0) {
+      Alert.alert('Validation Error', 'Please add at least one valid ingredient.');
+      return;
+    }
+
+    const recipe = customRecipeText
+      .split(".")
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0)
+      .map((line) => `${line}.`);
+
+    if (recipe.length === 0) {
+      Alert.alert('Validation Error', 'Please add at least one recipe step.');
+      return;
+    }
+
+    try {
+      setIsSubmittingDish(true);
+      await aiApi.postCustomDish({ title, ingredients: ingredientsObj, recipe });
+      console.log(
+  "Posting custom dish payload:",
+  JSON.stringify({ title, ingredients: ingredientsObj, recipe }, null, 2)
+);
+      Alert.alert('Success', 'Custom dish analyzed and created successfully!');
+      setIsCustomDishModalVisible(false);
+      setCustomTitle('');
+      setCustomIngredients([{ name: '', amount: '' }]);
+      setCustomRecipeText('');
+    } catch (err) {
+      console.error(err);
+      Alert.alert('Error', 'Failed to create custom dish. Please try again later.');
+    } finally {
+      setIsSubmittingDish(false);
+    }
+  };
+
+
   const renderDashboardMode = () => {
     const startStr = chartDays[0].dateStr;
     const endStr = chartDays[6].dateStr;
@@ -267,7 +366,7 @@ export default function StatsScreen() {
           <View style={styles.divider} />
           
           <Text style={styles.statsBoxTitle}>
-            {endStr === todayStr ? 'Last 7 Days (Ends Today)' : `${startStr} - ${endStr}`}
+            {endStr === todayStr ? 'Last 7 Days' : `${startStr} - ${endStr}`}
           </Text>
           <View style={styles.chartContainer}>
             {chartDays.map((d, i) => (
@@ -280,8 +379,20 @@ export default function StatsScreen() {
               </View>
             ))}
           </View>
-          <Text style={styles.swipeHint}>Swipe left/right to change week. Tap to open calendar.</Text>
+          {/*<Text style={styles.swipeHint}>Swipe left/right to change week. Tap to open calendar.</Text>*/}
         </View>
+
+        <View style={styles.customDishSection}>
+          <Text style={styles.customDishTitle}>Create Custom Dish</Text>
+          <Text style={styles.customDishDesc}>Add your own custom dish and let AI calculate its nutritional details.</Text>
+          <TouchableOpacity 
+            style={styles.addCustomDishBtn} 
+            onPress={() => setIsCustomDishModalVisible(true)}
+          >
+            <Text style={styles.addCustomDishBtnText}>Add Custom Dish</Text>
+          </TouchableOpacity>
+        </View>
+
       </View>
     );
   };
@@ -320,9 +431,9 @@ export default function StatsScreen() {
               <ActivityIndicator size="small" color="#208AEF" />
             ) : dailyStats ? (
               <>
-                <Text style={styles.mBoxStat}>Total Calories (that day): {dailyStats.consumed?.calories || 0}</Text>
-                <Text style={styles.mBoxStat}>Total Protein Intake (that day): {dailyStats.consumed?.protein || 0}g</Text>
-                <Text style={styles.mBoxStat}>Total Dishes Logged (that day): {dailyStats.totalDishes || 0}</Text>
+                <Text style={styles.mBoxStat}>Total Calories : {dailyStats.consumed?.calories || 0}</Text>
+                <Text style={styles.mBoxStat}>Total Protein Intake : {dailyStats.consumed?.protein || 0}g</Text>
+                <Text style={styles.mBoxStat}>Total Dishes Logged : {dailyStats.totalDishes || 0}</Text>
               </>
             ) : (
               <Text style={styles.mBoxStat}>No data for this day.</Text>
@@ -331,9 +442,9 @@ export default function StatsScreen() {
         ) : (
           <View style={styles.mBox}>
             <Text style={styles.mBoxTitle}>Monthly Summary</Text>
-            <Text style={styles.mBoxStat}>Total Calories (this month): {monthlyTotals.calories}</Text>
-            <Text style={styles.mBoxStat}>Total Protein Intake (this month): {monthlyTotals.protein}g</Text>
-            <Text style={styles.mBoxStat}>Total Dishes Logged (this month): {monthlyTotals.dishes}</Text>
+            <Text style={styles.mBoxStat}>Total Calories : {monthlyTotals.calories}</Text>
+            <Text style={styles.mBoxStat}>Total Protein Intake : {monthlyTotals.protein}g</Text>
+            <Text style={styles.mBoxStat}>Total Dishes Logged : {monthlyTotals.dishes}</Text>
           </View>
         )}
 
@@ -369,6 +480,93 @@ export default function StatsScreen() {
         <Text style={styles.headerTitle}>Stats</Text>
         {mode === 'dashboard' ? renderDashboardMode() : renderCalendarMode()}
       </ScrollView>
+
+      <Modal
+        visible={isCustomDishModalVisible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => !isSubmittingDish && setIsCustomDishModalVisible(false)}
+      >
+        <SafeAreaView style={styles.modalSafeArea}>
+          <KeyboardAvoidingView 
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            style={{ flex: 1 }}
+          >
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalHeaderTitle}>Add Custom Dish</Text>
+              <TouchableOpacity 
+                onPress={() => setIsCustomDishModalVisible(false)}
+                disabled={isSubmittingDish}
+                style={styles.modalCloseBtn}
+              >
+                <Ionicons name="close" size={24} color="#000" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView contentContainerStyle={styles.modalScrollContent}>
+              <View style={styles.inputGroup}>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Add Title of the Dish"
+                  value={customTitle}
+                  onChangeText={setCustomTitle}
+                  placeholderTextColor="#999"
+                />
+              </View>
+
+              <Text style={styles.sectionLabel}>Ingredients:</Text>
+              {customIngredients.map((ing, idx) => (
+                <View key={`ing-${idx}`} style={styles.ingredientRow}>
+                  <TextInput
+                    style={[styles.textInput, { flex: 2, marginRight: Spacing.two }]}
+                    placeholder="Ingredient (e.g. Eggs)"
+                    value={ing.name}
+                    onChangeText={(val) => handleUpdateIngredient(idx, 'name', val)}
+                    placeholderTextColor="#999"
+                  />
+                  <TextInput
+                    style={[styles.textInput, { flex: 1 }]}
+                    placeholder="Amount (e.g. 2)"
+                    value={ing.amount}
+                    onChangeText={(val) => handleUpdateIngredient(idx, 'amount', val)}
+                    placeholderTextColor="#999"
+                  />
+                </View>
+              ))}
+              <TouchableOpacity onPress={handleAddIngredient} style={styles.addMoreBtn}>
+                <Text style={styles.addMoreBtnText}>Add More +</Text>
+              </TouchableOpacity>
+
+              <Text style={styles.sectionLabel}>Recipe:</Text>
+              <View style={styles.recipeRow}>
+                <TextInput
+                  style={[styles.textInput, { flex: 1, minHeight: 120, textAlignVertical: 'top' }]}
+                  placeholder="Write the recipe."
+                  value={customRecipeText}
+                  onChangeText={setCustomRecipeText}
+                  multiline
+                  placeholderTextColor="#999"
+                />
+              </View>
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity 
+                style={[styles.postDishBtn, isSubmittingDish && styles.postDishBtnDisabled]}
+                onPress={handlePostDish}
+                disabled={isSubmittingDish}
+              >
+                {isSubmittingDish ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.postDishBtnText}>Post Dish</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </KeyboardAvoidingView>
+        </SafeAreaView>
+      </Modal>
+
     </SafeAreaView>
   );
 }
@@ -393,9 +591,9 @@ const styles = StyleSheet.create({
   exceededLabel: { color: '#FF3B30', fontWeight: '600' },
   macroText: { fontSize: 14, color: '#444', fontWeight: '500' },
   divider: { height: 1, backgroundColor: '#eee', marginVertical: Spacing.four },
-  chartContainer: { flexDirection: 'row', justifyContent: 'space-between', height: 200, alignItems: 'flex-end', paddingTop: Spacing.four },
+  chartContainer: { flexDirection: 'row', justifyContent: 'space-between', height: 180, alignItems: 'flex-end', paddingTop: Spacing.four },
   barContainer: { alignItems: 'center', flex: 1 },
-  barTrack: { height: 120, width: 24, backgroundColor: '#f0f0f0', borderRadius: 12, justifyContent: 'flex-end', overflow: 'hidden' },
+  barTrack: { height: 150, width: 24, backgroundColor: '#f0f0f0', borderRadius: 12, justifyContent: 'flex-end', overflow: 'hidden' },
   barFill: { backgroundColor: '#208AEF', width: '100%', borderRadius: 12 },
   barLabel: { fontSize: 10, color: '#666', marginTop: 4 },
   barValue: { fontSize: 10, color: '#000', fontWeight: 'bold', marginTop: 2 },
@@ -422,5 +620,37 @@ const styles = StyleSheet.create({
   dayCellHasData: { backgroundColor: '#eef6ff', borderRadius: 20 },
   dayCellSelected: { backgroundColor: '#208AEF', borderRadius: 20 },
   dayText: { fontSize: 16, color: '#333' },
-  dayTextSelected: { color: '#fff', fontWeight: 'bold' }
+  dayTextSelected: { color: '#fff', fontWeight: 'bold' },
+  
+  // Custom Dish
+  customDishSection: {
+    marginTop: Spacing.two,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: Spacing.four,
+    alignItems: 'center',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
+  },
+  customDishTitle: { fontSize: 18, fontWeight: 'bold', color: '#333', marginBottom: Spacing.two },
+  customDishDesc: { fontSize: 14, color: '#666', textAlign: 'center', marginBottom: Spacing.four },
+  addCustomDishBtn: { backgroundColor: '#208AEF', paddingVertical: Spacing.three, paddingHorizontal: Spacing.six, borderRadius: 24 },
+  addCustomDishBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+
+  // Modal
+  modalSafeArea: { flex: 1, backgroundColor: '#F5F5F5' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: Spacing.four, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#eee' },
+  modalHeaderTitle: { fontSize: 20, fontWeight: 'bold', color: '#333' },
+  modalCloseBtn: { padding: Spacing.one },
+  modalScrollContent: { padding: Spacing.four, paddingBottom: Spacing.eight },
+  inputGroup: { marginBottom: Spacing.four },
+  textInput: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: Spacing.three, fontSize: 14, color: '#333' },
+  sectionLabel: { fontSize: 18, fontWeight: 'bold', color: '#333', marginTop: Spacing.four, marginBottom: Spacing.three },
+  ingredientRow: { flexDirection: 'row', marginBottom: Spacing.three },
+  addMoreBtn: { alignSelf: 'flex-start', paddingVertical: Spacing.two, marginBottom: Spacing.four },
+  addMoreBtnText: { color: '#208AEF', fontWeight: 'bold', fontSize: 16 },
+  recipeRow: { marginBottom: Spacing.three },
+  modalFooter: { padding: Spacing.four, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#eee' },
+  postDishBtn: { backgroundColor: '#208AEF', paddingVertical: Spacing.four, borderRadius: 12, alignItems: 'center' },
+  postDishBtnDisabled: { backgroundColor: '#90C4F7' },
+  postDishBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 18 },
 });
