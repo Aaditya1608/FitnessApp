@@ -47,6 +47,20 @@ export default function AppLayout() {
           tabBarIcon: ({ color }) => <Ionicons name="settings-outline" size={24} color={color} />,
         }}
       />
+      <Tabs.Screen
+        name="history"
+        options={{
+          href: null,
+          title: 'Dish History',
+        }}
+      />
+      <Tabs.Screen
+        name="custom-dishes"
+        options={{
+          href: null,
+          title: 'Custom Dishes',
+        }}
+      />
     </Tabs>
   );
 }

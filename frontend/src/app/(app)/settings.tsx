@@ -19,6 +19,8 @@ import { Spacing } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { useAppTheme } from '@/context/ThemeContext';
 import { userApi } from '@/api/user';
+import { useRouter } from 'expo-router';
+
 
 // ─── Human-readable label helpers ────────────────────────────────────────────
 
@@ -157,6 +159,7 @@ type EditForm = {
 export default function SettingsScreen() {
   const { user, logout } = useAuth();
   const { isDark, toggleTheme, colors } = useAppTheme();
+  const router = useRouter();
 
   const [details, setDetails] = useState<UserDetails>(null);
   const [isLoadingDetails, setIsLoadingDetails] = useState(true);
@@ -317,7 +320,7 @@ export default function SettingsScreen() {
           {/* Dish History row */}
           <TouchableOpacity
             style={[s.settingsRow, s.rowWithChevron]}
-            onPress={() => Alert.alert('Coming Soon', 'Dish History will be available in a future update.')}
+            onPress={() => router.push('/history' as any)}
             activeOpacity={0.7}
           >
             <View style={s.settingsRowLeft}>
@@ -337,7 +340,7 @@ export default function SettingsScreen() {
           {/* Custom Dishes row */}
           <TouchableOpacity
             style={[s.settingsRow, s.rowWithChevron]}
-            onPress={() => Alert.alert('Coming Soon', 'Custom Dishes listing will be available in a future update.')}
+            onPress={() => router.push('/custom-dishes' as any)}
             activeOpacity={0.7}
           >
             <View style={s.settingsRowLeft}>

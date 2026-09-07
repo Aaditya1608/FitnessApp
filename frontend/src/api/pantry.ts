@@ -62,3 +62,11 @@ export const getSavedDishes = async (filters?: GetSavedDishesFilters): Promise<{
 
   return apiClient(endpoint);
 };
+
+export const getDishHistory = async (): Promise<{ data: Dish[], message?: string }> => {
+  return apiClient('/api/dishes/history');
+};
+
+export const getCustomDishes = async (): Promise<{ data: Dish[], message?: string }> => {
+  return apiClient('/api/dishes/custom');
+};
