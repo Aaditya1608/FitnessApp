@@ -11,11 +11,11 @@ export default function AppLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#208AEF',
-        tabBarInactiveTintColor: colorScheme === 'dark' ? '#636366' : '#8E8E93',
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textSecondary,
         tabBarStyle: {
-          backgroundColor: colors.background,
-          borderTopColor: colorScheme === 'dark' ? '#2C2C2E' : '#e5e5e5',
+          backgroundColor: colors.surface,
+          borderTopColor: colors.border,
         },
       }}
     >

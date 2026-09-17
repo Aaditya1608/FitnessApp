@@ -1,39 +1,54 @@
 import React from "react";
-import { TouchableOpacity, Text, ActivityIndicator, StyleSheet, ViewStyle, TextStyle } from "react-native";
+import { TouchableOpacity, ActivityIndicator, StyleSheet, ViewStyle } from "react-native";
+import { AppText } from "./AppText";
+import { useAppTheme } from "@/context/ThemeContext";
+import { BorderRadius } from "@/constants/theme";
 
 interface ButtonProps {
   title: string;
   onPress: () => void;
-  variant?: "primary" | "secondary";
+  variant?: "primary" | "secondary" | "ghost";
   loading?: boolean;
   disabled?: boolean;
   style?: ViewStyle;
-  color?: string;
+  color?: string; // Kept for compatibility, overrides background color
 }
 
 export function Button({ title, onPress, variant = "primary", loading, disabled, style, color }: ButtonProps) {
-  const isPrimary = variant === "primary";
+  const { colors } = useAppTheme();
+
+  const getBackgroundColor = () => {
+    if (color) return color;
+    if (variant === "primary") return colors.primary;
+    if (variant === "secondary") return colors.secondary;
+    return "transparent";
+  };
+
+  const getTextColor = () => {
+    if (variant === "primary") return "#000000"; // High contrast on Mint
+    if (variant === "secondary") return "#000000"; // High contrast on Sage
+    return colors.text;
+  };
 
   return (
     <TouchableOpacity
       style={[
         styles.button,
-        isPrimary ? styles.primary : styles.secondary,
+        { backgroundColor: getBackgroundColor() },
+        variant === "ghost" && { borderWidth: 1, borderColor: colors.border },
         (disabled || loading) && styles.disabled,
         style,
-        color? {backgroundColor: color }: null,
       ]}
       onPress={onPress}
       disabled={disabled || loading}
       activeOpacity={0.8}
-      
     >
       {loading ? (
-        <ActivityIndicator color={isPrimary ? "#fff" : "#208AEF"} />
+        <ActivityIndicator color={getTextColor()} />
       ) : (
-        <Text style={[styles.text, isPrimary ? styles.textPrimary : styles.textSecondary]}>
+        <AppText variant="button" color={getTextColor()}>
           {title}
-        </Text>
+        </AppText>
       )}
     </TouchableOpacity>
   );
@@ -41,32 +56,14 @@ export function Button({ title, onPress, variant = "primary", loading, disabled,
 
 const styles = StyleSheet.create({
   button: {
-    height: 50,
-    borderRadius: 25,
+    minHeight: 48,
+    borderRadius: BorderRadius.lg,
     justifyContent: "center",
     alignItems: "center",
     marginVertical: 8,
     width: "100%",
   },
-  primary: {
-    backgroundColor: "#000000",
-  },
-  secondary: {
-    backgroundColor: "transparent",
-    borderWidth: 1,
-    borderColor: "#208AEF",
-  },
   disabled: {
-    opacity: 0.6,
-  },
-  text: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  textPrimary: {
-    color: "#fff",
-  },
-  textSecondary: {
-    color: "#208AEF",
+    opacity: 0.5,
   },
 });

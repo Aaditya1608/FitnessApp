@@ -1,6 +1,9 @@
 import React, { useState } from "react";
-import { View, TextInput as RNTextInput, Text, StyleSheet, TouchableOpacity, TextInputProps as RNTextInputProps } from "react-native";
+import { View, TextInput as RNTextInput, StyleSheet, TouchableOpacity, TextInputProps as RNTextInputProps } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { AppText } from "./AppText";
+import { useAppTheme } from "@/context/ThemeContext";
+import { BorderRadius } from "@/constants/theme";
 
 interface TextInputProps extends RNTextInputProps {
   label: string;
@@ -9,15 +12,35 @@ interface TextInputProps extends RNTextInputProps {
 
 export function TextInput({ label, error, secureTextEntry, ...props }: TextInputProps) {
   const [isPasswordVisible, setIsPasswordVisible] = useState(!secureTextEntry);
+  const [isFocused, setIsFocused] = useState(false);
+  const { colors } = useAppTheme();
 
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>{label}</Text>
-      <View style={[styles.inputContainer, error ? styles.inputError : null]}>
+      <AppText variant="caption" color={colors.text} style={styles.label}>
+        {label}
+      </AppText>
+      <View 
+        style={[
+          styles.inputContainer, 
+          { 
+            backgroundColor: colors.backgroundElement,
+            borderColor: error ? colors.error : (isFocused ? colors.primary : colors.border)
+          }
+        ]}
+      >
         <RNTextInput
-          style={styles.input}
-          placeholderTextColor="#8E8E93"
+          style={[styles.input, { color: colors.text }]}
+          placeholderTextColor={colors.textSecondary}
           secureTextEntry={secureTextEntry && !isPasswordVisible}
+          onFocus={(e) => {
+            setIsFocused(true);
+            props.onFocus?.(e);
+          }}
+          onBlur={(e) => {
+            setIsFocused(false);
+            props.onBlur?.(e);
+          }}
           {...props}
         />
         {secureTextEntry && (
@@ -28,12 +51,12 @@ export function TextInput({ label, error, secureTextEntry, ...props }: TextInput
             <Ionicons
               name={isPasswordVisible ? "eye-off" : "eye"}
               size={20}
-              color="#8E8E93"
+              color={colors.textSecondary}
             />
           </TouchableOpacity>
         )}
       </View>
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+      {error ? <AppText variant="caption" color={colors.error} style={styles.errorText}>{error}</AppText> : null}
     </View>
   );
 }
@@ -44,8 +67,6 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   label: {
-    fontSize: 14,
-    color: "#000",
     marginBottom: 6,
     fontWeight: "500",
   },
@@ -53,26 +74,18 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#E5E5EA",
-    borderRadius: 12,
-    backgroundColor: "#F2F2F7",
+    borderRadius: BorderRadius.md,
     paddingHorizontal: 12,
-  },
-  inputError: {
-    borderColor: "#FF3B30",
   },
   input: {
     flex: 1,
-    height: 50,
+    minHeight: 48,
     fontSize: 16,
-    color: "#000",
   },
   eyeIcon: {
     padding: 10,
   },
   errorText: {
-    color: "#FF3B30",
-    fontSize: 12,
     marginTop: 4,
     marginLeft: 4,
   },

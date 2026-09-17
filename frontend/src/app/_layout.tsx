@@ -5,14 +5,23 @@ import * as SplashScreen from 'expo-splash-screen';
 import { ActivityIndicator, View } from 'react-native';
 import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
 import { useEffect } from 'react';
+import { useFonts } from 'expo-font';
+import { Colors } from '@/constants/theme';
 
 SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
-  const { user, isLoading, hasDetails } = useAuth();
+  const { user, isLoading: authLoading, hasDetails } = useAuth();
   const { colorScheme } = useAppTheme();
   const segments = useSegments();
   const router = useRouter();
+
+  const [fontsLoaded, fontError] = useFonts({
+    'Thernaly-Regular': require('../../assets/fonts/thernally/Thernaly-Regular.ttf'),
+    'Thernaly-Italic': require('../../assets/fonts/thernally/Thernaly-Italic.ttf'),
+  });
+
+  const isLoading = authLoading || (!fontsLoaded && !fontError);
 
   useEffect(() => {
     if (!isLoading) {
@@ -48,8 +57,26 @@ function RootLayoutNav() {
     );
   }
 
+  const CustomDefaultTheme = {
+    ...DefaultTheme,
+    colors: {
+      ...DefaultTheme.colors,
+      background: Colors.light.background,
+      card: Colors.light.surface,
+    },
+  };
+
+  const CustomDarkTheme = {
+    ...DarkTheme,
+    colors: {
+      ...DarkTheme.colors,
+      background: Colors.dark.background,
+      card: Colors.dark.surface,
+    },
+  };
+
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={colorScheme === 'dark' ? CustomDarkTheme : CustomDefaultTheme}>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="(auth)" />

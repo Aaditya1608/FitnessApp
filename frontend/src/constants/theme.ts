@@ -10,17 +10,27 @@ import { Platform } from 'react-native';
 export const Colors = {
   light: {
     text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
+    background: '#f5f0f6',
+    backgroundElement: '#ffffff',
     backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
+    textSecondary: 'rgba(21, 49, 49, 0.7)',
+    primary: '#c0dfa1',
+    secondary: '#9fc490',
+    surface: '#ffffff',
+    border: 'rgba(21, 49, 49, 0.1)',
+    error: '#E57373',
   },
   dark: {
-    text: '#ffffff',
+    text: '#f5f0f6',
     background: '#000000',
-    backgroundElement: '#212225',
+    backgroundElement: '#153131',
     backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
+    textSecondary: '#9fc490',
+    primary: '#c0dfa1',
+    secondary: '#9fc490',
+    surface: '#153131',
+    border: 'rgba(245, 240, 246, 0.1)',
+    error: '#EF5350',
   },
 } as const;
 
@@ -61,6 +71,36 @@ export const Spacing = {
   six: 64,
   seven: 96,
   eight: 128,
+} as const;
+
+export const BorderRadius = {
+  sm: 8,
+  md: 16,
+  lg: 24,
+  full: 9999,
+} as const;
+
+export const Shadows = {
+  light: {
+    sm: {
+      shadowColor: '#153131',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+    md: {
+      shadowColor: '#153131',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.08,
+      shadowRadius: 8,
+      elevation: 4,
+    },
+  },
+  dark: {
+    sm: { elevation: 0 },
+    md: { elevation: 0 },
+  },
 } as const;
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;

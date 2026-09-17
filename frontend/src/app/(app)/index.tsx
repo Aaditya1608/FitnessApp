@@ -1,12 +1,19 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { StyleSheet, View, Text, ScrollView, ActivityIndicator, TouchableOpacity, Alert, PanResponder, Modal, KeyboardAvoidingView, Platform, TextInput } from 'react-native';
+import { StyleSheet, View, ScrollView, ActivityIndicator, TouchableOpacity, Alert, PanResponder, Modal, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Spacing } from '@/constants/theme';
 import { statsApi } from '@/api/stats';
 import { aiApi } from '@/api/ai';
 import { useAuth } from '@/context/AuthContext';
+import { useAppTheme } from '@/context/ThemeContext';
 import { useFocusEffect } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+
+// Reusable Components
+import { AppCard } from '@/components/ui/AppCard';
+import { AppText } from '@/components/ui/AppText';
+import { AppIcon } from '@/components/ui/AppIcon';
+import { Button } from '@/components/ui/Button';
+import { TextInput } from '@/components/ui/TextInput';
 
 const formatDate = (date: Date) => {
   const d = new Date(date);
@@ -16,6 +23,7 @@ const formatDate = (date: Date) => {
 
 export default function StatsScreen() {
   const { user } = useAuth();
+  const { colors, colorScheme } = useAppTheme();
   
   const [mode, setMode] = useState<'dashboard' | 'calendar'>('dashboard');
   
@@ -307,9 +315,9 @@ export default function StatsScreen() {
       setIsSubmittingDish(true);
       await aiApi.postCustomDish({ title, ingredients: ingredientsObj, recipe });
       console.log(
-  "Posting custom dish payload:",
-  JSON.stringify({ title, ingredients: ingredientsObj, recipe }, null, 2)
-);
+        "Posting custom dish payload:",
+        JSON.stringify({ title, ingredients: ingredientsObj, recipe }, null, 2)
+      );
       Alert.alert('Success', 'Custom dish analyzed and created successfully!');
       setIsCustomDishModalVisible(false);
       setCustomTitle('');
@@ -335,63 +343,88 @@ export default function StatsScreen() {
 
     return (
       <View style={styles.dashboardContainer} {...panResponder.panHandlers}>
-        <View style={styles.statsBox}>
-          <Text style={styles.statsBoxTitle}>Today's Summary</Text>
+        <AppCard variant="elevated" style={styles.statsBox}>
+          <AppText variant="subheading" style={styles.statsBoxTitle}>Today's Progress</AppText>
           {isLoadingToday ? (
-             <ActivityIndicator size="small" color="#208AEF" />
+             <ActivityIndicator size="small" color={colors.primary} />
           ) : (
             <>
+              <View style={styles.heroRemaining}>
+                <AppText variant="display" color={isExceeded ? colors.error : colors.text} align="center" style={{ fontSize: 64, lineHeight: 72 }}>
+                  {Math.abs(remaining || 0)}
+                </AppText>
+                <AppText variant="caption" color={isExceeded ? colors.error : colors.textSecondary} align="center">
+                  {isExceeded ? 'KCAL EXCEEDED' : 'KCAL REMAINING'}
+                </AppText>
+              </View>
+
               <View style={styles.row}>
                 <View style={styles.statItem}>
-                   <Text style={styles.statValue}>{targetCalories || 0}</Text>
-                   <Text style={styles.statLabel}>Target</Text>
+                   <AppText variant="heading">{consumed?.calories || 0}</AppText>
+                   <AppText variant="caption" color={colors.textSecondary}>Consumed</AppText>
                 </View>
                 <View style={styles.statItem}>
-                   <Text style={styles.statValue}>{consumed?.calories || 0}</Text>
-                   <Text style={styles.statLabel}>Consumed</Text>
-                </View>
-                <View style={styles.statItem}>
-                   <Text style={[styles.statValue, isExceeded && styles.exceededValue]}>{Math.abs(remaining || 0)}</Text>
-                   <Text style={[styles.statLabel, isExceeded && styles.exceededLabel]}>{isExceeded ? 'Exceeded' : 'Remaining'}</Text>
+                   <AppText variant="heading">{targetCalories || 0}</AppText>
+                   <AppText variant="caption" color={colors.textSecondary}>Target</AppText>
                 </View>
               </View>
+              
+              <View style={[styles.divider, { backgroundColor: colors.border }]} />
+              
               <View style={styles.row}>
-                <Text style={styles.macroText}>Protein: {consumed?.protein || 0}g</Text>
-                <Text style={styles.macroText}>Fat: {consumed?.fat || 0}g</Text>
-                <Text style={styles.macroText}>Carbs: {consumed?.carbs || 0}g</Text>
+                <View style={styles.macroItem}>
+                  <AppText variant="body" style={styles.macroValue}>{consumed?.protein || 0}g</AppText>
+                  <AppText variant="caption" color={colors.textSecondary}>Protein</AppText>
+                </View>
+                <View style={styles.macroItem}>
+                  <AppText variant="body" style={styles.macroValue}>{consumed?.fat || 0}g</AppText>
+                  <AppText variant="caption" color={colors.textSecondary}>Fat</AppText>
+                </View>
+                <View style={styles.macroItem}>
+                  <AppText variant="body" style={styles.macroValue}>{consumed?.carbs || 0}g</AppText>
+                  <AppText variant="caption" color={colors.textSecondary}>Carbs</AppText>
+                </View>
               </View>
             </>
           )}
           
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
           
-          <Text style={styles.statsBoxTitle}>
+          <AppText variant="subheading" style={styles.statsBoxTitle}>
             {endStr === todayStr ? 'Last 7 Days' : `${startStr} - ${endStr}`}
-          </Text>
+          </AppText>
           <View style={styles.chartContainer}>
             {chartDays.map((d, i) => (
               <View key={i} style={styles.barContainer}>
-                <View style={styles.barTrack}>
-                  <View style={[styles.barFill, { height: `${(d.calories / maxChartCalories) * 100}%` }]} />
+                <View style={[styles.barTrack, { backgroundColor: colors.backgroundElement }]}>
+                  <View style={[
+                    styles.barFill, 
+                    { 
+                      height: `${(d.calories / maxChartCalories) * 100}%`,
+                      backgroundColor: d.dateStr === todayStr ? colors.primary : colors.secondary
+                    }
+                  ]} />
                 </View>
-                <Text style={styles.barLabel}>{d.dateStr === todayStr ? 'Today' : d.date.toLocaleString('default', { weekday: 'short' })}</Text>
-                <Text style={styles.barValue}>{d.calories}</Text>
+                <AppText variant="caption" color={colors.textSecondary} style={styles.barLabel}>
+                  {d.dateStr === todayStr ? 'Today' : d.date.toLocaleString('default', { weekday: 'short' })}
+                </AppText>
+                <AppText variant="caption" style={styles.barValue}>{d.calories}</AppText>
               </View>
             ))}
           </View>
-          {/*<Text style={styles.swipeHint}>Swipe left/right to change week. Tap to open calendar.</Text>*/}
-        </View>
+        </AppCard>
 
-        <View style={styles.customDishSection}>
-          <Text style={styles.customDishTitle}>Create Custom Dish</Text>
-          <Text style={styles.customDishDesc}>Add your own custom dish and let AI calculate its nutritional details.</Text>
-          <TouchableOpacity 
-            style={styles.addCustomDishBtn} 
+        <AppCard variant="flat" style={styles.customDishSection}>
+          <AppText variant="heading" style={styles.customDishTitle}>Create Custom Dish</AppText>
+          <AppText variant="body" color={colors.textSecondary} style={styles.customDishDesc} align="center">
+            Add your own custom dish and let AI calculate its nutritional details.
+          </AppText>
+          <Button 
+            title="Add Custom Dish" 
             onPress={() => setIsCustomDishModalVisible(true)}
-          >
-            <Text style={styles.addCustomDishBtnText}>Add Custom Dish</Text>
-          </TouchableOpacity>
-        </View>
+            variant="primary"
+          />
+        </AppCard>
 
       </View>
     );
@@ -402,56 +435,56 @@ export default function StatsScreen() {
       <View style={styles.calendarContainer}>
         <View style={styles.calHeader}>
           <TouchableOpacity onPress={() => setMode('dashboard')} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="#208AEF" />
-            <Text style={styles.backText}>Back</Text>
+            <AppIcon name="arrow-back" size={24} color={colors.primary} />
+            <AppText variant="body" color={colors.primary} style={styles.backText}>Back</AppText>
           </TouchableOpacity>
         </View>
         
         <View style={styles.monthSelector}>
           <TouchableOpacity onPress={() => setCurrentMonth(p => p.month === 1 ? {year: p.year-1, month: 12} : {...p, month: p.month-1})}>
-            <Text style={styles.monthNavText}>{'<'}</Text>
+            <AppText variant="heading" color={colors.primary} style={styles.monthNavText}>{'<'}</AppText>
           </TouchableOpacity>
-          <Text style={styles.monthText}>
+          <AppText variant="heading" style={styles.monthText}>
              {new Date(currentMonth.year, currentMonth.month - 1).toLocaleString('default', { month: 'long', year: 'numeric' })}
-          </Text>
+          </AppText>
           <TouchableOpacity onPress={() => setCurrentMonth(p => p.month === 12 ? {year: p.year+1, month: 1} : {...p, month: p.month+1})}>
-            <Text style={styles.monthNavText}>{'>'}</Text>
+            <AppText variant="heading" color={colors.primary} style={styles.monthNavText}>{'>'}</AppText>
           </TouchableOpacity>
         </View>
 
         {selectedDate ? (
-          <View style={styles.mBox}>
+          <AppCard variant="elevated" style={styles.mBox}>
             <View style={styles.mBoxHeader}>
-              <Text style={styles.mBoxTitle}>{selectedDate}</Text>
+              <AppText variant="subheading" style={styles.mBoxTitle}>{selectedDate}</AppText>
               <TouchableOpacity onPress={() => setSelectedDate(null)}>
-                 <Ionicons name="close" size={24} color="#000" />
+                 <AppIcon name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
             {isLoadingDaily ? (
-              <ActivityIndicator size="small" color="#208AEF" />
+              <ActivityIndicator size="small" color={colors.primary} />
             ) : dailyStats ? (
               <>
-                <Text style={styles.mBoxStat}>Total Calories : {dailyStats.consumed?.calories || 0}</Text>
-                <Text style={styles.mBoxStat}>Total Protein Intake : {dailyStats.consumed?.protein || 0}g</Text>
-                <Text style={styles.mBoxStat}>Total Dishes Logged : {dailyStats.totalDishes || 0}</Text>
+                <AppText variant="body" style={styles.mBoxStat}>Total Calories : {dailyStats.consumed?.calories || 0}</AppText>
+                <AppText variant="body" style={styles.mBoxStat}>Total Protein Intake : {dailyStats.consumed?.protein || 0}g</AppText>
+                <AppText variant="body" style={styles.mBoxStat}>Total Dishes Logged : {dailyStats.totalDishes || 0}</AppText>
               </>
             ) : (
-              <Text style={styles.mBoxStat}>No data for this day.</Text>
+              <AppText variant="body" style={styles.mBoxStat}>No data for this day.</AppText>
             )}
-          </View>
+          </AppCard>
         ) : (
-          <View style={styles.mBox}>
-            <Text style={styles.mBoxTitle}>Monthly Summary</Text>
-            <Text style={styles.mBoxStat}>Total Calories : {monthlyTotals.calories}</Text>
-            <Text style={styles.mBoxStat}>Total Protein Intake : {monthlyTotals.protein}g</Text>
-            <Text style={styles.mBoxStat}>Total Dishes Logged : {monthlyTotals.dishes}</Text>
-          </View>
+          <AppCard variant="elevated" style={styles.mBox}>
+            <AppText variant="subheading" style={styles.mBoxTitle}>Monthly Summary</AppText>
+            <AppText variant="body" style={styles.mBoxStat}>Total Calories : {monthlyTotals.calories}</AppText>
+            <AppText variant="body" style={styles.mBoxStat}>Total Protein Intake : {monthlyTotals.protein}g</AppText>
+            <AppText variant="body" style={styles.mBoxStat}>Total Dishes Logged : {monthlyTotals.dishes}</AppText>
+          </AppCard>
         )}
 
-        <View style={styles.calendarGrid}>
+        <AppCard variant="flat" style={styles.calendarGrid}>
           <View style={styles.weekDaysRow}>
             {['S','M','T','W','T','F','S'].map((day, i) => (
-               <Text key={`wd-${i}`} style={styles.weekDayText}>{day}</Text>
+               <AppText key={`wd-${i}`} variant="caption" color={colors.textSecondary} style={styles.weekDayText}>{day}</AppText>
             ))}
           </View>
           <View style={styles.daysRow}>
@@ -461,23 +494,33 @@ export default function StatsScreen() {
               return (
                 <TouchableOpacity 
                   key={item.dStr} 
-                  style={[styles.dayCell, isSelected && styles.dayCellSelected, item.hasData && !isSelected && styles.dayCellHasData]}
+                  style={[
+                    styles.dayCell, 
+                    isSelected && { backgroundColor: colors.primary, borderRadius: 20 },
+                    item.hasData && !isSelected && { backgroundColor: colors.backgroundSelected, borderRadius: 20 }
+                  ]}
                   onPress={() => setSelectedDate(item.dStr)}
                 >
-                  <Text style={[styles.dayText, isSelected && styles.dayTextSelected]}>{item.day}</Text>
+                  <AppText 
+                    variant="body" 
+                    color={isSelected ? '#000000' : colors.text} 
+                    style={isSelected ? { fontWeight: 'bold' } : undefined}
+                  >
+                    {item.day}
+                  </AppText>
                 </TouchableOpacity>
               )
             })}
           </View>
-        </View>
+        </AppCard>
       </View>
     );
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent} scrollEnabled={mode !== 'dashboard'}>
-        <Text style={styles.headerTitle}>Stats</Text>
+        <AppText variant="heading" style={styles.headerTitle}>Stats</AppText>
         {mode === 'dashboard' ? renderDashboardMode() : renderCalendarMode()}
       </ScrollView>
 
@@ -487,81 +530,81 @@ export default function StatsScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => !isSubmittingDish && setIsCustomDishModalVisible(false)}
       >
-        <SafeAreaView style={styles.modalSafeArea}>
+        <SafeAreaView style={[styles.modalSafeArea, { backgroundColor: colors.background }]}>
           <KeyboardAvoidingView 
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             style={{ flex: 1 }}
           >
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalHeaderTitle}>Add Custom Dish</Text>
+            <View style={[styles.modalHeader, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+              <AppText variant="heading" style={styles.modalHeaderTitle}>Add Custom Dish</AppText>
               <TouchableOpacity 
                 onPress={() => setIsCustomDishModalVisible(false)}
                 disabled={isSubmittingDish}
                 style={styles.modalCloseBtn}
               >
-                <Ionicons name="close" size={24} color="#000" />
+                <AppIcon name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
 
             <ScrollView contentContainerStyle={styles.modalScrollContent}>
               <View style={styles.inputGroup}>
                 <TextInput
-                  style={styles.textInput}
-                  placeholder="Add Title of the Dish"
+                  label="Dish Title"
+                  placeholder="e.g. Avocado Toast"
                   value={customTitle}
                   onChangeText={setCustomTitle}
-                  placeholderTextColor="#999"
                 />
               </View>
 
-              <Text style={styles.sectionLabel}>Ingredients:</Text>
+              <AppText variant="subheading" style={styles.sectionLabel}>Ingredients</AppText>
               {customIngredients.map((ing, idx) => (
                 <View key={`ing-${idx}`} style={styles.ingredientRow}>
-                  <TextInput
-                    style={[styles.textInput, { flex: 2, marginRight: Spacing.two }]}
-                    placeholder="Ingredient (e.g. Eggs)"
-                    value={ing.name}
-                    onChangeText={(val) => handleUpdateIngredient(idx, 'name', val)}
-                    placeholderTextColor="#999"
-                  />
-                  <TextInput
-                    style={[styles.textInput, { flex: 1 }]}
-                    placeholder="Amount (e.g. 2)"
-                    value={ing.amount}
-                    onChangeText={(val) => handleUpdateIngredient(idx, 'amount', val)}
-                    placeholderTextColor="#999"
-                  />
+                  <View style={{ flex: 2, marginRight: Spacing.two }}>
+                    <TextInput
+                      label={idx === 0 ? "Ingredient" : ""}
+                      placeholder="e.g. Eggs"
+                      value={ing.name}
+                      onChangeText={(val) => handleUpdateIngredient(idx, 'name', val)}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <TextInput
+                      label={idx === 0 ? "Amount" : ""}
+                      placeholder="e.g. 2"
+                      value={ing.amount}
+                      onChangeText={(val) => handleUpdateIngredient(idx, 'amount', val)}
+                    />
+                  </View>
                 </View>
               ))}
-              <TouchableOpacity onPress={handleAddIngredient} style={styles.addMoreBtn}>
-                <Text style={styles.addMoreBtnText}>Add More +</Text>
-              </TouchableOpacity>
+              <Button 
+                title="Add More +" 
+                variant="ghost" 
+                onPress={handleAddIngredient}
+                style={{ alignSelf: 'flex-start', width: 'auto' }}
+              />
 
-              <Text style={styles.sectionLabel}>Recipe:</Text>
+              <AppText variant="subheading" style={styles.sectionLabel}>Recipe Steps</AppText>
               <View style={styles.recipeRow}>
                 <TextInput
-                  style={[styles.textInput, { flex: 1, minHeight: 120, textAlignVertical: 'top' }]}
+                  label=""
+                  style={{ minHeight: 120, textAlignVertical: 'top' }}
                   placeholder="Write the recipe."
                   value={customRecipeText}
                   onChangeText={setCustomRecipeText}
                   multiline
-                  placeholderTextColor="#999"
                 />
               </View>
             </ScrollView>
 
-            <View style={styles.modalFooter}>
-              <TouchableOpacity 
-                style={[styles.postDishBtn, isSubmittingDish && styles.postDishBtnDisabled]}
+            <View style={[styles.modalFooter, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
+              <Button 
+                title="Post Dish" 
                 onPress={handlePostDish}
                 disabled={isSubmittingDish}
-              >
-                {isSubmittingDish ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.postDishBtnText}>Post Dish</Text>
-                )}
-              </TouchableOpacity>
+                loading={isSubmittingDish}
+                variant="primary"
+              />
             </View>
           </KeyboardAvoidingView>
         </SafeAreaView>
@@ -572,85 +615,69 @@ export default function StatsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#F5F5F5' },
+  safeArea: { flex: 1 },
   scrollContent: { padding: Spacing.four, paddingBottom: Spacing.eight },
-  headerTitle: { fontSize: 28, fontWeight: 'bold', marginBottom: Spacing.four, color: '#000' },
+  headerTitle: { marginBottom: Spacing.four },
   
   // Dashboard
   dashboardContainer: { flex: 1 },
   statsBox: {
-    backgroundColor: '#fff', borderRadius: 16, padding: Spacing.four, 
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
+    padding: Spacing.four, 
+    marginBottom: Spacing.four,
   },
-  statsBoxTitle: { fontSize: 18, fontWeight: '600', marginBottom: Spacing.four, color: '#333' },
+  statsBoxTitle: { marginBottom: Spacing.four },
+  heroRemaining: {
+    alignItems: 'center',
+    marginVertical: Spacing.four,
+  },
   row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: Spacing.three },
   statItem: { alignItems: 'center', flex: 1 },
-  statValue: { fontSize: 22, fontWeight: 'bold', color: '#000' },
-  statLabel: { fontSize: 12, color: '#666', textTransform: 'uppercase' },
-  exceededValue: { color: '#FF3B30' },
-  exceededLabel: { color: '#FF3B30', fontWeight: '600' },
-  macroText: { fontSize: 14, color: '#444', fontWeight: '500' },
-  divider: { height: 1, backgroundColor: '#eee', marginVertical: Spacing.four },
+  macroItem: { alignItems: 'center', flex: 1 },
+  macroValue: { fontWeight: '600' },
+  divider: { height: 1, marginVertical: Spacing.four },
   chartContainer: { flexDirection: 'row', justifyContent: 'space-between', height: 180, alignItems: 'flex-end', paddingTop: Spacing.four },
   barContainer: { alignItems: 'center', flex: 1 },
-  barTrack: { height: 150, width: 24, backgroundColor: '#f0f0f0', borderRadius: 12, justifyContent: 'flex-end', overflow: 'hidden' },
-  barFill: { backgroundColor: '#208AEF', width: '100%', borderRadius: 12 },
-  barLabel: { fontSize: 10, color: '#666', marginTop: 4 },
-  barValue: { fontSize: 10, color: '#000', fontWeight: 'bold', marginTop: 2 },
-  swipeHint: { fontSize: 12, color: '#aaa', textAlign: 'center', marginTop: Spacing.four, fontStyle: 'italic' },
+  barTrack: { height: 150, width: 24, borderRadius: 12, justifyContent: 'flex-end', overflow: 'hidden' },
+  barFill: { width: '100%', borderRadius: 12 },
+  barLabel: { marginTop: 4 },
+  barValue: { fontWeight: 'bold', marginTop: 2 },
   
   // Calendar
   calendarContainer: { flex: 1 },
   calHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.four },
   backButton: { flexDirection: 'row', alignItems: 'center' },
-  backText: { fontSize: 16, color: '#208AEF', marginLeft: Spacing.one },
+  backText: { marginLeft: Spacing.one },
   monthSelector: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.four },
-  monthNavText: { fontSize: 24, fontWeight: 'bold', color: '#208AEF', paddingHorizontal: Spacing.four },
-  monthText: { fontSize: 18, fontWeight: '600' },
-  mBox: { backgroundColor: '#fff', borderRadius: 12, padding: Spacing.four, marginBottom: Spacing.four,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1 },
+  monthNavText: { paddingHorizontal: Spacing.four },
+  monthText: {},
+  mBox: { padding: Spacing.four, marginBottom: Spacing.four },
   mBoxHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.three },
-  mBoxTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: Spacing.two },
-  mBoxStat: { fontSize: 16, color: '#444', marginBottom: Spacing.one },
-  calendarGrid: { backgroundColor: '#fff', borderRadius: 12, padding: Spacing.two },
+  mBoxTitle: { marginBottom: Spacing.two },
+  mBoxStat: { marginBottom: Spacing.one },
+  calendarGrid: { padding: Spacing.two },
   weekDaysRow: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: Spacing.two },
-  weekDayText: { fontSize: 14, color: '#888', fontWeight: 'bold', width: 40, textAlign: 'center' },
+  weekDayText: { width: 40, textAlign: 'center' },
   daysRow: { flexDirection: 'row', flexWrap: 'wrap' },
   dayCell: { width: '14.28%', aspectRatio: 1, justifyContent: 'center', alignItems: 'center', marginVertical: 2 },
-  dayCellHasData: { backgroundColor: '#eef6ff', borderRadius: 20 },
-  dayCellSelected: { backgroundColor: '#208AEF', borderRadius: 20 },
-  dayText: { fontSize: 16, color: '#333' },
-  dayTextSelected: { color: '#fff', fontWeight: 'bold' },
   
   // Custom Dish
   customDishSection: {
     marginTop: Spacing.two,
-    backgroundColor: '#fff',
-    borderRadius: 16,
     padding: Spacing.four,
     alignItems: 'center',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
   },
-  customDishTitle: { fontSize: 18, fontWeight: 'bold', color: '#333', marginBottom: Spacing.two },
-  customDishDesc: { fontSize: 14, color: '#666', textAlign: 'center', marginBottom: Spacing.four },
-  addCustomDishBtn: { backgroundColor: '#208AEF', paddingVertical: Spacing.three, paddingHorizontal: Spacing.six, borderRadius: 24 },
-  addCustomDishBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  customDishTitle: { marginBottom: Spacing.two },
+  customDishDesc: { marginBottom: Spacing.four },
 
   // Modal
-  modalSafeArea: { flex: 1, backgroundColor: '#F5F5F5' },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: Spacing.four, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#eee' },
-  modalHeaderTitle: { fontSize: 20, fontWeight: 'bold', color: '#333' },
+  modalSafeArea: { flex: 1 },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: Spacing.four, borderBottomWidth: 1 },
+  modalHeaderTitle: {},
   modalCloseBtn: { padding: Spacing.one },
   modalScrollContent: { padding: Spacing.four, paddingBottom: Spacing.eight },
   inputGroup: { marginBottom: Spacing.four },
-  textInput: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: Spacing.three, fontSize: 14, color: '#333' },
-  sectionLabel: { fontSize: 18, fontWeight: 'bold', color: '#333', marginTop: Spacing.four, marginBottom: Spacing.three },
+  sectionLabel: { marginTop: Spacing.four, marginBottom: Spacing.three },
   ingredientRow: { flexDirection: 'row', marginBottom: Spacing.three },
-  addMoreBtn: { alignSelf: 'flex-start', paddingVertical: Spacing.two, marginBottom: Spacing.four },
-  addMoreBtnText: { color: '#208AEF', fontWeight: 'bold', fontSize: 16 },
   recipeRow: { marginBottom: Spacing.three },
-  modalFooter: { padding: Spacing.four, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#eee' },
-  postDishBtn: { backgroundColor: '#208AEF', paddingVertical: Spacing.four, borderRadius: 12, alignItems: 'center' },
-  postDishBtnDisabled: { backgroundColor: '#90C4F7' },
-  postDishBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 18 },
+  modalFooter: { padding: Spacing.four, borderTopWidth: 1 },
 });
