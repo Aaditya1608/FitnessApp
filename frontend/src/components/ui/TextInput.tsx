@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#000",
     marginBottom: 6,
-    fontWeight: "500",
+    fontWeight: "700",
   },
   inputContainer: {
     flexDirection: "row",
@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E5E5EA",
     borderRadius: 12,
-    backgroundColor: "#F2F2F7",
+    backgroundColor: "white",
     paddingHorizontal: 12,
   },
   inputError: {

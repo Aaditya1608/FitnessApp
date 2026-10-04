@@ -1,6 +1,6 @@
 import React from "react";
 import { TouchableOpacity, Text, ActivityIndicator, StyleSheet, ViewStyle, TextStyle } from "react-native";
-
+import {AppText} from "@/components/ui/AppText";
 interface ButtonProps {
   title: string;
   onPress: () => void;
@@ -9,9 +9,10 @@ interface ButtonProps {
   disabled?: boolean;
   style?: ViewStyle;
   color?: string;
+  textColor?: string;
 }
 
-export function Button({ title, onPress, variant = "primary", loading, disabled, style, color }: ButtonProps) {
+export function Button({ title, onPress, variant = "primary", loading, disabled, style, color, textColor }: ButtonProps) {
   const isPrimary = variant === "primary";
 
   return (
@@ -31,9 +32,9 @@ export function Button({ title, onPress, variant = "primary", loading, disabled,
       {loading ? (
         <ActivityIndicator color={isPrimary ? "#fff" : "#208AEF"} />
       ) : (
-        <Text style={[styles.text, isPrimary ? styles.textPrimary : styles.textSecondary]}>
+        <AppText fontFamily="PoppinsBold" style={[styles.text, isPrimary ? styles.textPrimary : styles.textSecondary, textColor? {color: textColor }: null,]}>
           {title}
-        </Text>
+        </AppText>
       )}
     </TouchableOpacity>
   );

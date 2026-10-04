@@ -5,6 +5,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { ActivityIndicator, View } from 'react-native';
 import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
 import { useEffect } from 'react';
+import { useFonts} from 'expo-font';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -61,6 +62,18 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    Thernaly: require("../../assets/fonts/Thernaly-Regular.ttf"),
+    ThernalyItalic: require("../../assets/fonts/Thernaly-Italic.ttf"),
+    PoppinsBlack: require("../../assets/fonts/Poppins-Black.ttf"),
+    PoppinsBold: require("../../assets/fonts/Poppins-Bold.ttf"),
+    PoppinsItalic: require("../../assets/fonts/Poppins-Italic.ttf"),
+    PoppinsLight: require("../../assets/fonts/Poppins-Light.ttf"),
+    PoppinsMedium: require("../../assets/fonts/Poppins-Medium.ttf"),
+    PoppinsRegular: require("../../assets/fonts/Poppins-Regular.ttf")
+    })
+  if (!fontsLoaded) return null;
+  
   return (
     <AppThemeProvider>
       <AuthProvider>

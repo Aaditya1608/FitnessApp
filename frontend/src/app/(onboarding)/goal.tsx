@@ -13,18 +13,20 @@ const GOAL_OPTIONS = [
 
 export default function GoalScreen() {
   const router = useRouter();
-  const { completeOnboarding } = useAuth();
+  const { user, completeOnboarding } = useAuth();
   const [goal, setGoal] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    getOnboardingData().then(data => {
-      if (data.goal) setGoal(data.goal);
-      setIsLoading(false);
-    });
-  }, []);
+    if (user) {
+      getOnboardingData(user.id).then(data => {
+        if (data.goal) setGoal(data.goal);
+        setIsLoading(false);
+      });
+    }
+  }, [user]);
 
   const handleSubmit = async () => {
     if (!goal) {
@@ -33,8 +35,13 @@ export default function GoalScreen() {
     }
     setError('');
     
+    if (!user) {
+      setError('User not authenticated');
+      return;
+    }
+    
     // Save locally first in case of network error
-    const savedData = await saveOnboardingData({ goal });
+    const savedData = await saveOnboardingData(user.id, { goal });
     
     if (!savedData) {
        setError('Failed to retrieve full data. Please try again.');
@@ -55,7 +62,7 @@ export default function GoalScreen() {
       });
 
       // Clear local storage and update context to allow entry to (app)
-      await clearOnboardingData();
+      await clearOnboardingData(user.id);
       completeOnboarding();
       
     } catch (e: any) {
@@ -66,7 +73,11 @@ export default function GoalScreen() {
   };
 
   const handleBack = () => {
-    router.back();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/lifestyle');
+    }
   };
 
   if (isLoading) return null;

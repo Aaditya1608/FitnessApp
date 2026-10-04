@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Button } from '@/components/ui/Button';
+import {AppText} from '@/components/ui/AppText';
 
 export default function WelcomeScreen() {
   const router = useRouter();
@@ -10,8 +11,9 @@ export default function WelcomeScreen() {
     <View style={styles.container}>
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.title}>FitJourney</Text>
-          <Text style={styles.subtitle}>Your personal fitness and nutrition companion.</Text>
+          <AppText fontFamily="Thernaly" style={styles.title}>FitJourney</AppText>
+          <AppText style={styles.subtitle}>Your personal fitness and nutrition companion.</AppText>
+          
         </View>
 
         <View style={styles.actionContainer}>
@@ -19,12 +21,14 @@ export default function WelcomeScreen() {
             title="Log In"
             onPress={() => router.push('/(auth)/login' as any)}
             style={styles.loginButton}
+            textColor="#f5f0f6"
           />
           <Button
             title="Sign Up"
-            variant="secondary"
+            // variant="secondary"
             onPress={() => router.push('/(auth)/signup' as any)}
             style={styles.signUpButton}
+            textColor="#000000"
           />
         </View>
       </View>
@@ -35,41 +39,38 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#464b71',
+    backgroundColor: '#f5f0f6',
   },
   content: {
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
     paddingHorizontal: 24,
     paddingBottom: 60,
   },
   header: {
-    marginBottom: 60,
+    marginTop: 100,
   },
   title: {
     fontSize: 48,
-    fontWeight: '800',
-    color: '#fff',
+    color: '#000',
     marginBottom: 12,
-    fontFamily: 'Outfit-Bold',
   },
   subtitle: {
-    fontSize: 18,
-    color: '#A1A1AA',
+    fontSize: 16,
+    color: '#153131',
     lineHeight: 24,
   },
   actionContainer: {
     gap: 8,
   },
   loginButton: {
-    borderWidth: 2,
-    borderColor: "#A1A1AA",
-    borderRadius: 12,
+    borderRadius: 24,
+    backgroundColor: '#153131',
+    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)"
   },
   signUpButton: {
-    borderWidth: 2,
-    borderColor: "#A1A1AA",
-    borderRadius: 12,
-    backgroundColor: 'black',
+    borderRadius: 24,
+    backgroundColor: '#c0dfa1',
+    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)"
   }
 });

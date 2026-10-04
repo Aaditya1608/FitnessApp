@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
 import { ErrorText } from '@/components/ui/ErrorText';
 import { Ionicons } from '@expo/vector-icons';
+import { AppText } from '@/components/ui/AppText';
 
 export default function SignupScreen() {
   const router = useRouter();
@@ -44,9 +45,12 @@ export default function SignupScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent} bounces={false}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color="#fff" />
+            <Ionicons name="arrow-back" size={24} color="#000" />
           </TouchableOpacity>
-          <Text style={styles.title}>Create Account</Text>
+          <View style={styles.main}>
+          <AppText fontFamily="Thernaly" style={styles.title}>Create Account</AppText>
+          <AppText style={styles.subtitle}>Lorem ipsum dolor sit amet consectetur.</AppText>
+          </View>
         </View>
 
         <View style={styles.form}>
@@ -87,6 +91,7 @@ export default function SignupScreen() {
             onPress={handleSignup}
             loading={isLoading}
             style={styles.submitBtn}
+            color="#153131"
           />
 
           <View style={styles.footer}>
@@ -104,7 +109,7 @@ export default function SignupScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#f5f0f6',
   },
   scrollContent: {
     flexGrow: 1,
@@ -117,18 +122,21 @@ const styles = StyleSheet.create({
   backButton: {
     marginBottom: 24,
   },
+  main:{
+    marginTop: 40
+  },
   title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#fff',
+    fontSize: 40,
+    color: '#000',
+  },
+  subtitle: {
+    marginTop: 8,
+    fontSize: 19.5
   },
   form: {
     flex: 1,
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
     paddingHorizontal: 24,
-    paddingTop: 32,
+    paddingTop: 24,
   },
   submitBtn: {
     marginTop: 16,
@@ -143,7 +151,7 @@ const styles = StyleSheet.create({
     color: '#8E8E93',
   },
   footerLink: {
-    color: '#208AEF',
+    color: '#153131',
     fontWeight: '600',
   },
 });

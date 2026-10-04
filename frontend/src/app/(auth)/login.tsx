@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { TextInput } from '@/components/ui/TextInput';
 import { ErrorText } from '@/components/ui/ErrorText';
 import { Ionicons } from '@expo/vector-icons';
+import {AppText} from '@/components/ui/AppText';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -42,9 +43,12 @@ export default function LoginScreen() {
     >
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
+          <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
-        <Text style={styles.title}>Welcome Back</Text>
+        <View style={styles.main}>
+        <AppText fontFamily="Thernaly" style={styles.title}>Welcome Back</AppText>
+        <AppText style={styles.subtitle}>Sign in to continue your fitness journey</AppText>
+        </View>
       </View>
 
       <View style={styles.form}>
@@ -75,6 +79,7 @@ export default function LoginScreen() {
           onPress={handleLogin}
           loading={isLoading}
           style={styles.submitBtn}
+          color="#153131"
         />
 
         <View style={styles.footer}>
@@ -91,7 +96,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#f5f0f6',
   },
   header: {
     paddingTop: 60,
@@ -101,18 +106,22 @@ const styles = StyleSheet.create({
   backButton: {
     marginBottom: 24,
   },
+  main: {
+    marginTop: 40
+  },
   title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#fff',
+    fontSize: 44,
+    color: '#000',
+    marginTop: 10
+  },
+  subtitle: {
+    marginTop: 8,
+    fontSize: 20
   },
   form: {
     flex: 1,
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
     paddingHorizontal: 24,
-    paddingTop: 32,
+    paddingTop: 25,
   },
   submitBtn: {
     marginTop: 16,
@@ -126,7 +135,7 @@ const styles = StyleSheet.create({
     color: '#8E8E93',
   },
   footerLink: {
-    color: '#208AEF',
+    color: '#153131',
     fontWeight: '600',
   },
 });

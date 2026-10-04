@@ -3,6 +3,7 @@ import { View, StyleSheet, Text, TouchableOpacity, ScrollView } from 'react-nati
 import { useRouter } from 'expo-router';
 import { Button } from '@/components/ui/Button';
 import { getOnboardingData, saveOnboardingData } from '../../utils/onboardingStorage';
+import { useAuth } from '../../context/AuthContext';
 
 const LIFESTYLE_OPTIONS = [
   { label: 'Sedentary', value: 'sedentary', desc: 'Little or no exercise' },
@@ -14,16 +15,19 @@ const LIFESTYLE_OPTIONS = [
 
 export default function LifestyleScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const [lifestyle, setLifestyle] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    getOnboardingData().then(data => {
-      if (data.lifestyle) setLifestyle(data.lifestyle);
-      setIsLoading(false);
-    });
-  }, []);
+    if (user) {
+      getOnboardingData(user.id).then(data => {
+        if (data.lifestyle) setLifestyle(data.lifestyle);
+        setIsLoading(false);
+      });
+    }
+  }, [user]);
 
   const handleNext = async () => {
     if (!lifestyle) {
@@ -31,12 +35,18 @@ export default function LifestyleScreen() {
       return;
     }
     setError('');
-    await saveOnboardingData({ lifestyle });
+    if (user) {
+      await saveOnboardingData(user.id, { lifestyle });
+    }
     router.push('/goal' as any);
   };
 
   const handleBack = () => {
-    router.back();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/sex');
+    }
   };
 
   if (isLoading) return null;

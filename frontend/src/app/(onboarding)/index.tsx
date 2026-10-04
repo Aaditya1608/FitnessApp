@@ -2,14 +2,17 @@ import { useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { View, ActivityIndicator } from 'react-native';
 import { getOnboardingData } from '../../utils/onboardingStorage';
+import { useAuth } from '../../context/AuthContext';
 
 export default function OnboardingIndex() {
   const router = useRouter();
+  const { user } = useAuth();
 
   useEffect(() => {
     const determineNextStep = async () => {
-      const data = await getOnboardingData();
-
+      if (!user) return;
+      const data = await getOnboardingData(user.id);
+      console.log("ONBOARDING DATA:", data);
       if (!data.weight) {
         router.replace('/weight');
       } else if (!data.height) {
