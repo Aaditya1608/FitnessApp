@@ -4,13 +4,16 @@ import { useRouter } from 'expo-router';
 import { Button } from '@/components/ui/Button';
 import { getOnboardingData, saveOnboardingData } from '../../utils/onboardingStorage';
 import { useAuth } from '../../context/AuthContext';
+import { ProgressBar } from '@/components/ui/ProgressBar';
+import { AppText } from '@/components/ui/AppText';
+import { Ionicons } from '@expo/vector-icons';
 
 const LIFESTYLE_OPTIONS = [
-  { label: 'Sedentary', value: 'sedentary', desc: 'Little or no exercise' },
-  { label: 'Lightly Active', value: 'lightly_active', desc: 'Light exercise/sports 1-3 days/week' },
-  { label: 'Moderately Active', value: 'moderately_active', desc: 'Moderate exercise/sports 3-5 days/week' },
-  { label: 'Highly Active', value: 'highly_active', desc: 'Hard exercise/sports 6-7 days a week' },
-  { label: 'Extra Active', value: 'extra_active', desc: 'Very hard exercise/sports & physical job' },
+  { label: 'Sedentary', value: 'sedentary', desc: "body-outline" },
+  { label: 'Lightly Active', value: 'lightly_active', desc: "headset-outline" },
+  { label: 'Moderately Active', value: 'moderately_active', desc: "walk-outline" },
+  { label: 'Highly Active', value: 'highly_active', desc: "basketball-outline" },
+  { label: 'Extra Active', value: 'extra_active', desc: "bicycle-outline" },
 ];
 
 export default function LifestyleScreen() {
@@ -54,42 +57,45 @@ export default function LifestyleScreen() {
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>What is your lifestyle level?</Text>
-        
-        <View style={styles.optionsContainer}>
-          {LIFESTYLE_OPTIONS.map((option) => (
-            <TouchableOpacity
-              key={option.value}
-              style={[
-                styles.optionButton,
-                lifestyle === option.value && styles.optionButtonSelected
-              ]}
-              onPress={() => {
-                setLifestyle(option.value);
-                setError('');
-              }}
-            >
-              <Text style={[
-                styles.optionText,
-                lifestyle === option.value && styles.optionTextSelected
-              ]}>
-                {option.label}
-              </Text>
-              <Text style={[
-                styles.descText,
-                lifestyle === option.value && styles.optionTextSelected
-              ]}>
-                {option.desc}
-              </Text>
-            </TouchableOpacity>
-          ))}
+        <View style={styles.top}>
+          <ProgressBar currentStep={5} totalSteps={6} />
         </View>
+        <View style={styles.main}>
+          <AppText fontFamily="Thernaly" style={styles.title}>What is your <Text style={styles.highlight}>lifestyle </Text>level?</AppText>
 
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+          <View style={styles.optionsContainer}>
+            {LIFESTYLE_OPTIONS.map((option) => (
+              <TouchableOpacity
+                key={option.value}
+                style={[
+                  styles.optionButton,
+                  lifestyle === option.value && styles.optionButtonSelected
+                ]}
+                onPress={() => {
+                  setLifestyle(option.value);
+                  setError('');
+                }}
+              >
+                <View style={styles.logoBox}>
+                  <Ionicons name={option.desc as any} size={25}></Ionicons>
+                </View>
+                <AppText fontFamily="PoppinsBold" style={[
+                  styles.optionText,
+                  lifestyle === option.value && styles.optionTextSelected
+                ]}>
+                  {option.label}
+                </AppText>
 
-        <View style={styles.buttonContainer}>
-          <Button title="Back" variant="secondary" onPress={handleBack} style={styles.button} />
-          <Button title="Continue" onPress={handleNext} style={styles.button} />
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+          <View style={styles.buttonContainer}>
+            <Button title="Back" onPress={handleBack} style={styles.buttonA} textColor="#153131" />
+            <Button title="Continue" onPress={handleNext} style={styles.buttonB} />
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -97,18 +103,31 @@ export default function LifestyleScreen() {
 }
 
 const styles = StyleSheet.create({
+  top: {
+    marginTop: 50
+  },
+  main: {
+    marginTop: 160
+  },
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f0f6',
   },
   content: {
     flexGrow: 1,
     padding: 24,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
+  },
+  logoBox: {
+    backgroundColor: "#e9e6ec",
+    padding: 5,
+    borderRadius: 10
+  },
+  highlight: {
+    color: "#9fc490"
   },
   title: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: 40,
     marginBottom: 24,
     color: '#000',
   },
@@ -116,14 +135,18 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   optionButton: {
+    flex: 1,
+    flexDirection: "row",
     borderWidth: 1,
     borderColor: '#E5E5EA',
     borderRadius: 12,
     padding: 16,
+    justifyContent: "space-between",
+    alignItems: "center"
   },
   optionButtonSelected: {
-    borderColor: '#208AEF',
-    backgroundColor: '#EBF4FF',
+    borderColor: '#153131',
+    backgroundColor: '#C0DFA1',
   },
   optionText: {
     fontSize: 16,
@@ -136,7 +159,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   optionTextSelected: {
-    color: '#208AEF',
+    color: '#153131',
   },
   errorText: {
     color: "#FF3B30",
@@ -149,7 +172,12 @@ const styles = StyleSheet.create({
     gap: 12,
     marginTop: 32,
   },
-  button: {
-    flex: 1,
-  }
+  buttonA: {
+    width: "50%",
+    backgroundColor: "#C0DFA1"
+  },
+  buttonB: {
+    width: "50%",
+    backgroundColor: "#153131"
+  },
 });

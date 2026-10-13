@@ -5,10 +5,13 @@ import { Button } from '@/components/ui/Button';
 import { getOnboardingData, saveOnboardingData, clearOnboardingData } from '../../utils/onboardingStorage';
 import { userApi } from '../../api/user';
 import { useAuth } from '../../context/AuthContext';
+import { ProgressBar } from '@/components/ui/ProgressBar';
+import { AppText } from '@/components/ui/AppText';
+import { Ionicons } from '@expo/vector-icons';
 
 const GOAL_OPTIONS = [
-  { label: 'Weight Loss', value: 'weight_loss' },
-  { label: 'Weight Gain', value: 'weight_gain' },
+  { label: 'Weight Loss', value: 'weight_loss', desc: 'bicycle-outline' },
+  { label: 'Weight Gain', value: 'weight_gain', desc: 'barbell-outline' },
 ];
 
 export default function GoalScreen() {
@@ -34,22 +37,22 @@ export default function GoalScreen() {
       return;
     }
     setError('');
-    
+
     if (!user) {
       setError('User not authenticated');
       return;
     }
-    
+
     // Save locally first in case of network error
     const savedData = await saveOnboardingData(user.id, { goal });
-    
+
     if (!savedData) {
-       setError('Failed to retrieve full data. Please try again.');
-       return;
+      setError('Failed to retrieve full data. Please try again.');
+      return;
     }
 
     setIsSubmitting(true);
-    
+
     try {
       // Send single request to the backend
       await userApi.postDetails({
@@ -64,7 +67,7 @@ export default function GoalScreen() {
       // Clear local storage and update context to allow entry to (app)
       await clearOnboardingData(user.id);
       completeOnboarding();
-      
+
     } catch (e: any) {
       setError(e.message || 'An error occurred during submission.');
     } finally {
@@ -85,48 +88,75 @@ export default function GoalScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>What is your primary goal?</Text>
-        
-        <View style={styles.optionsContainer}>
-          {GOAL_OPTIONS.map((option) => (
-            <TouchableOpacity
-              key={option.value}
-              style={[
-                styles.optionButton,
-                goal === option.value && styles.optionButtonSelected
-              ]}
-              onPress={() => {
-                setGoal(option.value);
-                setError('');
-              }}
-              disabled={isSubmitting}
-            >
-              <Text style={[
-                styles.optionText,
-                goal === option.value && styles.optionTextSelected
-              ]}>
-                {option.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+        <View style={styles.top}>
+          <ProgressBar currentStep={6} totalSteps={6} />
         </View>
+        <View style={styles.main}>
+          <AppText fontFamily="Thernaly" style={styles.title}>What are you <Text style={styles.highlight}>working</Text> toward?</AppText>
 
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+          <View style={styles.optionsContainer}>
+            {GOAL_OPTIONS.map((option) => {
+              const isSelected = goal === option.value;
 
-        <View style={styles.buttonContainer}>
-          <Button 
-            title="Back" 
-            variant="secondary" 
-            onPress={handleBack} 
-            style={styles.button} 
-            disabled={isSubmitting}
-          />
-          <Button 
-            title={isSubmitting ? "Saving..." : "Complete Setup"} 
-            onPress={handleSubmit} 
-            style={styles.button} 
-            disabled={isSubmitting}
-          />
+              return (
+                <TouchableOpacity
+                  key={option.value}
+                  style={[
+                    styles.optionButton,
+                    isSelected && styles.optionButtonSelected,
+                  ]}
+                  onPress={() => {
+                    setGoal(option.value);
+                    setError('');
+                  }}
+                  disabled={isSubmitting}
+                  activeOpacity={0.8}
+                >
+                  {/* Icon */}
+                  <View style={styles.optionIconContainer}>
+                    <Ionicons name={option.desc as any} size={25}></Ionicons>
+                  </View>
+
+                  {/* Title and description */}
+                  <View style={styles.optionContent}>
+                    <Text
+                      style={[
+                        styles.optionText,
+                        isSelected && styles.optionTextSelected,
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+
+                    <Text style={styles.optionDescription}>
+                      {option.value === 'weightLoss'
+                        ? 'Lose weight and improve body composition.'
+                        : 'Build healthy mass and get stronger.'}
+                    </Text>
+                  </View>
+
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
+          <View style={styles.buttonContainer}>
+            <Button
+              title="Back"
+              onPress={handleBack}
+              style={styles.buttonA}
+              disabled={isSubmitting}
+              textColor="#153131"
+            />
+            <Button
+              title={isSubmitting ? "Saving..." : "Complete Setup"}
+              onPress={handleSubmit}
+              style={styles.buttonB}
+              disabled={isSubmitting}
+            />
+          </View>
         </View>
       </View>
     </View>
@@ -134,42 +164,86 @@ export default function GoalScreen() {
 }
 
 const styles = StyleSheet.create({
+  top: {
+    marginTop: 50
+  },
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f0f6',
   },
   content: {
     flex: 1,
     padding: 24,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
+  },
+  main: {
+    marginTop: 180
   },
   title: {
-    fontSize: 20,
+    fontSize: 40,
     fontWeight: '600',
     marginBottom: 24,
     color: '#000',
   },
+  highlight: {
+    color: "#9fc490"
+  },
   optionsContainer: {
-    gap: 12,
+    gap: 16,
   },
+
   optionButton: {
-    borderWidth: 1,
-    borderColor: '#E5E5EA',
-    borderRadius: 12,
-    padding: 16,
+    flexDirection: 'row',
     alignItems: 'center',
+    minHeight: 116,
+    padding: 16,
+    borderWidth: 1.5,
+    borderColor: '#E5E5EA',
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
+    gap: 14,
   },
+
   optionButtonSelected: {
-    borderColor: '#208AEF',
-    backgroundColor: '#EBF4FF',
+    borderColor: '#9FC490',
+    backgroundColor: '#C0DFA1',
   },
+
+  optionIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    padding: 5,
+    backgroundColor: 'rgba(21, 49, 49, 0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  optionIcon: {
+    fontSize: 34,
+    color: '#153131',
+  },
+
+  optionContent: {
+    flex: 1,
+    justifyContent: 'center',
+    gap: 6,
+  },
+
   optionText: {
-    fontSize: 16,
-    color: '#000',
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#153131',
   },
+
   optionTextSelected: {
-    color: '#208AEF',
-    fontWeight: '600',
+    color: '#153131',
+  },
+
+  optionDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#526361',
   },
   errorText: {
     color: "#FF3B30",
@@ -182,7 +256,12 @@ const styles = StyleSheet.create({
     gap: 12,
     marginTop: 32,
   },
-  button: {
-    flex: 1,
-  }
+  buttonA: {
+    width: "50%",
+    backgroundColor: "#C0DFA1"
+  },
+  buttonB: {
+    width: "50%",
+    backgroundColor: "#153131"
+  },
 });

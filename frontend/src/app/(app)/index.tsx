@@ -7,6 +7,7 @@ import { aiApi } from '@/api/ai';
 import { useAuth } from '@/context/AuthContext';
 import { useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { AppText } from '@/components/ui/AppText';
 
 const formatDate = (date: Date) => {
   const d = new Date(date);
@@ -16,14 +17,14 @@ const formatDate = (date: Date) => {
 
 export default function StatsScreen() {
   const { user } = useAuth();
-  
+
   const [mode, setMode] = useState<'dashboard' | 'calendar'>('dashboard');
-  
+
   // Dashboard state
   const [todayStats, setTodayStats] = useState<any>(null);
   const [isLoadingToday, setIsLoadingToday] = useState(false);
   const [chartEndDate, setChartEndDate] = useState<Date>(new Date());
-  
+
   // Calendar state
   const [currentMonth, setCurrentMonth] = useState(() => {
     const d = new Date();
@@ -32,11 +33,11 @@ export default function StatsScreen() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [dailyStats, setDailyStats] = useState<any>(null);
   const [isLoadingDaily, setIsLoadingDaily] = useState(false);
-  
+
   // Shared state
   const [monthlyDataCache, setMonthlyDataCache] = useState<Record<string, any[]>>({});
   const [isLoadingMonthly, setIsLoadingMonthly] = useState(false);
-  
+
   // Custom Dish state
   const [isCustomDishModalVisible, setIsCustomDishModalVisible] = useState(false);
   const [customTitle, setCustomTitle] = useState('');
@@ -44,7 +45,7 @@ export default function StatsScreen() {
   const [customRecipeText, setCustomRecipeText] = useState('');
   const [isSubmittingDish, setIsSubmittingDish] = useState(false);
 
-  
+
   const focusStateRef = useRef({ chartEndDate, mode, currentMonth });
   useEffect(() => {
     focusStateRef.current = { chartEndDate, mode, currentMonth };
@@ -53,17 +54,17 @@ export default function StatsScreen() {
   useFocusEffect(
     useCallback(() => {
       fetchTodayStats();
-      
+
       const { chartEndDate: end, mode: currentMode, currentMonth: cMonth } = focusStateRef.current;
-      
+
       if (currentMode === 'dashboard') {
         const endDate = new Date(end);
         const startDate = new Date(endDate);
         startDate.setDate(startDate.getDate() - 6);
-        
+
         const m1 = { year: startDate.getFullYear(), month: startDate.getMonth() + 1 };
         const m2 = { year: endDate.getFullYear(), month: endDate.getMonth() + 1 };
-        
+
         fetchMonthlyData(m1.year, m1.month, true);
         if (m1.year !== m2.year || m1.month !== m2.month) {
           fetchMonthlyData(m2.year, m2.month, true);
@@ -73,13 +74,13 @@ export default function StatsScreen() {
       }
     }, [])
   );
-  
+
   useEffect(() => {
     if (mode === 'dashboard') {
       fetchTodayStats();
     }
   }, [mode]);
-  
+
   const fetchTodayStats = async () => {
     try {
       setIsLoadingToday(true);
@@ -91,7 +92,7 @@ export default function StatsScreen() {
       setIsLoadingToday(false);
     }
   };
-  
+
   const fetchMonthlyData = async (year: number, month: number, forceRefresh: boolean = false) => {
     const key = `${year}-${month}`;
     if (!forceRefresh && monthlyDataCache[key]) return;
@@ -105,7 +106,7 @@ export default function StatsScreen() {
       setIsLoadingMonthly(false);
     }
   };
-  
+
   // Fetch required months for chart
   const prevModeRef = useRef(mode);
 
@@ -117,10 +118,10 @@ export default function StatsScreen() {
       const end = new Date(chartEndDate);
       const start = new Date(end);
       start.setDate(start.getDate() - 6);
-      
+
       const m1 = { year: start.getFullYear(), month: start.getMonth() + 1 };
       const m2 = { year: end.getFullYear(), month: end.getMonth() + 1 };
-      
+
       fetchMonthlyData(m1.year, m1.month, isModeSwitch);
       if (m1.year !== m2.year || m1.month !== m2.month) {
         fetchMonthlyData(m2.year, m2.month, isModeSwitch);
@@ -129,7 +130,7 @@ export default function StatsScreen() {
       fetchMonthlyData(currentMonth.year, currentMonth.month, isModeSwitch);
     }
   }, [chartEndDate, mode, currentMonth.year, currentMonth.month]);
-  
+
   useEffect(() => {
     if (selectedDate) {
       const fetchDaily = async () => {
@@ -157,10 +158,10 @@ export default function StatsScreen() {
       d.setDate(d.getDate() - i);
       const dStr = formatDate(d);
       const mKey = `${d.getFullYear()}-${d.getMonth() + 1}`;
-      
+
       const monthData = monthlyDataCache[mKey] || [];
       const dayData = monthData.find(item => item.date === dStr);
-      
+
       days.push({
         date: d,
         dateStr: dStr,
@@ -202,17 +203,17 @@ export default function StatsScreen() {
         if (user?.created_at) {
           const startDate = new Date(user.created_at);
           startDate.setHours(0, 0, 0, 0);
-          
+
           const startOfNewWeek = new Date(newDate);
           startOfNewWeek.setDate(startOfNewWeek.getDate() - 6);
-          startOfNewWeek.setHours(0,0,0,0);
-          
+          startOfNewWeek.setHours(0, 0, 0, 0);
+
           const startOfPrevWeek = new Date(prev);
           startOfPrevWeek.setDate(startOfPrevWeek.getDate() - 6);
-          startOfPrevWeek.setHours(0,0,0,0);
-          
+          startOfPrevWeek.setHours(0, 0, 0, 0);
+
           if (startOfNewWeek < startDate && startOfPrevWeek <= startDate) {
-             return prev; 
+            return prev;
           }
         }
       } else {
@@ -307,9 +308,9 @@ export default function StatsScreen() {
       setIsSubmittingDish(true);
       await aiApi.postCustomDish({ title, ingredients: ingredientsObj, recipe });
       console.log(
-  "Posting custom dish payload:",
-  JSON.stringify({ title, ingredients: ingredientsObj, recipe }, null, 2)
-);
+        "Posting custom dish payload:",
+        JSON.stringify({ title, ingredients: ingredientsObj, recipe }, null, 2)
+      );
       Alert.alert('Success', 'Custom dish analyzed and created successfully!');
       setIsCustomDishModalVisible(false);
       setCustomTitle('');
@@ -338,21 +339,21 @@ export default function StatsScreen() {
         <View style={styles.statsBox}>
           <Text style={styles.statsBoxTitle}>Today's Summary</Text>
           {isLoadingToday ? (
-             <ActivityIndicator size="small" color="#208AEF" />
+            <ActivityIndicator size="small" color="#208AEF" />
           ) : (
             <>
               <View style={styles.row}>
                 <View style={styles.statItem}>
-                   <Text style={styles.statValue}>{targetCalories || 0}</Text>
-                   <Text style={styles.statLabel}>Target</Text>
+                  <Text style={styles.statValue}>{targetCalories || 0}</Text>
+                  <Text style={styles.statLabel}>Target</Text>
                 </View>
                 <View style={styles.statItem}>
-                   <Text style={styles.statValue}>{consumed?.calories || 0}</Text>
-                   <Text style={styles.statLabel}>Consumed</Text>
+                  <Text style={styles.statValue}>{consumed?.calories || 0}</Text>
+                  <Text style={styles.statLabel}>Consumed</Text>
                 </View>
                 <View style={styles.statItem}>
-                   <Text style={[styles.statValue, isExceeded && styles.exceededValue]}>{Math.abs(remaining || 0)}</Text>
-                   <Text style={[styles.statLabel, isExceeded && styles.exceededLabel]}>{isExceeded ? 'Exceeded' : 'Remaining'}</Text>
+                  <Text style={[styles.statValue, isExceeded && styles.exceededValue]}>{Math.abs(remaining || 0)}</Text>
+                  <Text style={[styles.statLabel, isExceeded && styles.exceededLabel]}>{isExceeded ? 'Exceeded' : 'Remaining'}</Text>
                 </View>
               </View>
               <View style={styles.row}>
@@ -362,9 +363,9 @@ export default function StatsScreen() {
               </View>
             </>
           )}
-          
+
           <View style={styles.divider} />
-          
+
           <Text style={styles.statsBoxTitle}>
             {endStr === todayStr ? 'Last 7 Days' : `${startStr} - ${endStr}`}
           </Text>
@@ -385,8 +386,8 @@ export default function StatsScreen() {
         <View style={styles.customDishSection}>
           <Text style={styles.customDishTitle}>Create Custom Dish</Text>
           <Text style={styles.customDishDesc}>Add your own custom dish and let AI calculate its nutritional details.</Text>
-          <TouchableOpacity 
-            style={styles.addCustomDishBtn} 
+          <TouchableOpacity
+            style={styles.addCustomDishBtn}
             onPress={() => setIsCustomDishModalVisible(true)}
           >
             <Text style={styles.addCustomDishBtnText}>Add Custom Dish</Text>
@@ -406,15 +407,15 @@ export default function StatsScreen() {
             <Text style={styles.backText}>Back</Text>
           </TouchableOpacity>
         </View>
-        
+
         <View style={styles.monthSelector}>
-          <TouchableOpacity onPress={() => setCurrentMonth(p => p.month === 1 ? {year: p.year-1, month: 12} : {...p, month: p.month-1})}>
+          <TouchableOpacity onPress={() => setCurrentMonth(p => p.month === 1 ? { year: p.year - 1, month: 12 } : { ...p, month: p.month - 1 })}>
             <Text style={styles.monthNavText}>{'<'}</Text>
           </TouchableOpacity>
           <Text style={styles.monthText}>
-             {new Date(currentMonth.year, currentMonth.month - 1).toLocaleString('default', { month: 'long', year: 'numeric' })}
+            {new Date(currentMonth.year, currentMonth.month - 1).toLocaleString('default', { month: 'long', year: 'numeric' })}
           </Text>
-          <TouchableOpacity onPress={() => setCurrentMonth(p => p.month === 12 ? {year: p.year+1, month: 1} : {...p, month: p.month+1})}>
+          <TouchableOpacity onPress={() => setCurrentMonth(p => p.month === 12 ? { year: p.year + 1, month: 1 } : { ...p, month: p.month + 1 })}>
             <Text style={styles.monthNavText}>{'>'}</Text>
           </TouchableOpacity>
         </View>
@@ -424,7 +425,7 @@ export default function StatsScreen() {
             <View style={styles.mBoxHeader}>
               <Text style={styles.mBoxTitle}>{selectedDate}</Text>
               <TouchableOpacity onPress={() => setSelectedDate(null)}>
-                 <Ionicons name="close" size={24} color="#000" />
+                <Ionicons name="close" size={24} color="#000" />
               </TouchableOpacity>
             </View>
             {isLoadingDaily ? (
@@ -450,8 +451,8 @@ export default function StatsScreen() {
 
         <View style={styles.calendarGrid}>
           <View style={styles.weekDaysRow}>
-            {['S','M','T','W','T','F','S'].map((day, i) => (
-               <Text key={`wd-${i}`} style={styles.weekDayText}>{day}</Text>
+            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+              <Text key={`wd-${i}`} style={styles.weekDayText}>{day}</Text>
             ))}
           </View>
           <View style={styles.daysRow}>
@@ -459,8 +460,8 @@ export default function StatsScreen() {
               if (!item) return <View key={`empty-${i}`} style={styles.dayCell} />;
               const isSelected = item.dStr === selectedDate;
               return (
-                <TouchableOpacity 
-                  key={item.dStr} 
+                <TouchableOpacity
+                  key={item.dStr}
                   style={[styles.dayCell, isSelected && styles.dayCellSelected, item.hasData && !isSelected && styles.dayCellHasData]}
                   onPress={() => setSelectedDate(item.dStr)}
                 >
@@ -477,7 +478,8 @@ export default function StatsScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollContent} scrollEnabled={mode !== 'dashboard'}>
-        <Text style={styles.headerTitle}>Stats</Text>
+        <AppText fontFamily="PoppinsBold" style={styles.headerTitle}>Stats</AppText>
+        <AppText>{ }</AppText>
         {mode === 'dashboard' ? renderDashboardMode() : renderCalendarMode()}
       </ScrollView>
 
@@ -488,13 +490,13 @@ export default function StatsScreen() {
         onRequestClose={() => !isSubmittingDish && setIsCustomDishModalVisible(false)}
       >
         <SafeAreaView style={styles.modalSafeArea}>
-          <KeyboardAvoidingView 
+          <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             style={{ flex: 1 }}
           >
             <View style={styles.modalHeader}>
               <Text style={styles.modalHeaderTitle}>Add Custom Dish</Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={() => setIsCustomDishModalVisible(false)}
                 disabled={isSubmittingDish}
                 style={styles.modalCloseBtn}
@@ -551,7 +553,7 @@ export default function StatsScreen() {
             </ScrollView>
 
             <View style={styles.modalFooter}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.postDishBtn, isSubmittingDish && styles.postDishBtnDisabled]}
                 onPress={handlePostDish}
                 disabled={isSubmittingDish}
@@ -574,12 +576,12 @@ export default function StatsScreen() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#F5F5F5' },
   scrollContent: { padding: Spacing.four, paddingBottom: Spacing.eight },
-  headerTitle: { fontSize: 28, fontWeight: 'bold', marginBottom: Spacing.four, color: '#000' },
-  
+  headerTitle: { fontSize: 28, marginBottom: Spacing.four, color: '#000' },
+
   // Dashboard
   dashboardContainer: { flex: 1 },
   statsBox: {
-    backgroundColor: '#fff', borderRadius: 16, padding: Spacing.four, 
+    backgroundColor: '#fff', borderRadius: 16, padding: Spacing.four,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
   },
   statsBoxTitle: { fontSize: 18, fontWeight: '600', marginBottom: Spacing.four, color: '#333' },
@@ -598,7 +600,7 @@ const styles = StyleSheet.create({
   barLabel: { fontSize: 10, color: '#666', marginTop: 4 },
   barValue: { fontSize: 10, color: '#000', fontWeight: 'bold', marginTop: 2 },
   swipeHint: { fontSize: 12, color: '#aaa', textAlign: 'center', marginTop: Spacing.four, fontStyle: 'italic' },
-  
+
   // Calendar
   calendarContainer: { flex: 1 },
   calHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.four },
@@ -607,8 +609,10 @@ const styles = StyleSheet.create({
   monthSelector: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.four },
   monthNavText: { fontSize: 24, fontWeight: 'bold', color: '#208AEF', paddingHorizontal: Spacing.four },
   monthText: { fontSize: 18, fontWeight: '600' },
-  mBox: { backgroundColor: '#fff', borderRadius: 12, padding: Spacing.four, marginBottom: Spacing.four,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1 },
+  mBox: {
+    backgroundColor: '#fff', borderRadius: 12, padding: Spacing.four, marginBottom: Spacing.four,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 1
+  },
   mBoxHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: Spacing.three },
   mBoxTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: Spacing.two },
   mBoxStat: { fontSize: 16, color: '#444', marginBottom: Spacing.one },
@@ -621,7 +625,7 @@ const styles = StyleSheet.create({
   dayCellSelected: { backgroundColor: '#208AEF', borderRadius: 20 },
   dayText: { fontSize: 16, color: '#333' },
   dayTextSelected: { color: '#fff', fontWeight: 'bold' },
-  
+
   // Custom Dish
   customDishSection: {
     marginTop: Spacing.two,

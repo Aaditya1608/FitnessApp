@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform,Text } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, Text } from 'react-native';
 import { useRouter } from 'expo-router';
 import { TextInput } from '@/components/ui/TextInput';
 import { Button } from '@/components/ui/Button';
@@ -55,31 +55,31 @@ export default function AgeScreen() {
     >
       <View style={styles.content}>
         <View style={styles.top}>
-                  <ProgressBar currentStep={3} totalSteps={6} />
-                </View>
-                <View style={styles.main}>
-                  <AppText fontFamily="Thernaly" style={styles.title}>How old are <Text style={styles.age}>you</Text>?</AppText>
-                  <AppText style={styles.subtitle}>No actually, how old are you?</AppText>
-        <TextInput
-          label=""
-          placeholder="e.g. 25"
-          keyboardType="numeric"
-          value={age}
-          onChangeText={(text) => {
-            setAge(text);
-            setError('');
-          }}
-          error={error}
-        />
-        <View style={styles.buttonContainer}>
-          <Button title="Back" onPress={handleBack} style={styles.buttonA} textColor="#153131"/>
-          <Button title="Continue" onPress={handleNext} style={styles.buttonB} />
+          <ProgressBar currentStep={3} totalSteps={6} />
         </View>
-        <View style={styles.extraBox}>
-          
-          <Ionicons name="information-circle-outline" size={20} color="#153131" style={styles.icon}/>
-          <AppText fontFamily="PoppinsBold" style={styles.extraBoxText}>Age is no barrier and it's a limitation you put on your mind.</AppText>
-        </View>
+        <View style={styles.main}>
+          <AppText fontFamily="Thernaly" style={styles.title}>How old are <Text style={styles.age}>you</Text>?</AppText>
+          <AppText style={styles.subtitle}>No actually, how old are you?</AppText>
+          <TextInput
+            label=""
+            placeholder="e.g. 25"
+            keyboardType="numeric"
+            value={age}
+            onChangeText={(text) => {
+              setAge(text);
+              setError('');
+            }}
+            error={error}
+          />
+          <View style={styles.buttonContainer}>
+            <Button title="Back" onPress={handleBack} style={styles.buttonA} textColor="#153131" />
+            <Button title="Continue" onPress={handleNext} style={styles.buttonB} />
+          </View>
+          <View style={styles.extraBox}>
+
+            <Ionicons name="information-circle-outline" size={20} color="#153131" style={styles.icon} />
+            <AppText fontFamily="PoppinsBold" style={styles.extraBoxText}>Age is no barrier and it's a limitation you put on your mind.</AppText>
+          </View>
         </View>
       </View>
     </KeyboardAvoidingView>
@@ -87,17 +87,17 @@ export default function AgeScreen() {
 }
 
 const styles = StyleSheet.create({
-  top:{
+  top: {
     marginTop: 50
   },
   container: {
     flex: 1,
     backgroundColor: '#f5f0f6',
   },
-  title:{
+  title: {
     fontSize: 40
   },
-  subtitle:{
+  subtitle: {
     fontSize: 16,
     marginTop: 10
   },
@@ -111,18 +111,18 @@ const styles = StyleSheet.create({
     gap: 12,
     marginTop: 24,
   },
-  buttonA:{
+  buttonA: {
     width: "50%",
     backgroundColor: "#C0DFA1"
   },
-  buttonB:{
+  buttonB: {
     width: "50%",
     backgroundColor: "#153131"
   },
-  main:{
+  main: {
     marginTop: 220
   },
-  age:{
+  age: {
     color: "#9fc490"
   },
   extraBox: {
@@ -132,11 +132,11 @@ const styles = StyleSheet.create({
     padding: 12,
     flexDirection: 'row'
   },
-  extraBoxText:{
-    marginLeft: 8,
+  extraBoxText: {
+    marginLeft: 6,
     fontSize: 14,
   },
-  icon:{
+  icon: {
     marginTop: 3
   }
 });

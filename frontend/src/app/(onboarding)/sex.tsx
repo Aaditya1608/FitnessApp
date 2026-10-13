@@ -6,6 +6,7 @@ import { getOnboardingData, saveOnboardingData } from '../../utils/onboardingSto
 import { useAuth } from '../../context/AuthContext';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { AppText } from '@/components/ui/AppText';
+import { Ionicons } from '@expo/vector-icons';
 
 const SEX_OPTIONS = [
   { label: 'Male', value: 'male' },
@@ -84,10 +85,10 @@ export default function SexScreen() {
                   ]}
                 >
                   {option.value === 'male'
-                    ? '♂'
+                    ? <Ionicons name="male" size={30}></Ionicons>
                     : option.value === 'female'
-                      ? '♀'
-                      : '⚧'}
+                      ? <Ionicons name="female" size={30}></Ionicons>
+                      : <Ionicons name="male-female" size={30}></Ionicons>}
                 </Text>
 
                 {/* Label */}
@@ -101,15 +102,6 @@ export default function SexScreen() {
                   {option.label}
                 </AppText>
 
-                {/* Radio indicator */}
-                <View
-                  style={[
-                    styles.radioOuter,
-                    isSelected && styles.radioOuterSelected,
-                  ]}
-                >
-                  {isSelected && <View style={styles.radioInner} />}
-                </View>
               </TouchableOpacity>
             );
           })}
@@ -118,8 +110,13 @@ export default function SexScreen() {
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
         <View style={styles.buttonContainer}>
-          <Button title="Back" variant="secondary" onPress={handleBack} style={styles.button} />
-          <Button title="Continue" onPress={handleNext} style={styles.button} />
+          <Button title="Back" onPress={handleBack} style={styles.buttonA} textColor="#153131" />
+          <Button title="Continue" onPress={handleNext} style={styles.buttonB} />
+        </View>
+        <View style={styles.extraBox}>
+
+          <Ionicons name="body-outline" size={20} color="#153131" style={styles.icon} />
+          <AppText fontFamily="PoppinsBold" style={styles.extraBoxText}>This helps us personalize your fitness and nutrition recommendations.</AppText>
         </View>
       </View>
     </View>
@@ -193,28 +190,6 @@ const styles = StyleSheet.create({
 
   optionTextSelected: {
     color: '#153131',
-    fontWeight: '700',
-  },
-
-  radioOuter: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 2,
-    borderColor: '#A9A9A9',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  radioOuterSelected: {
-    borderColor: '#153131',
-  },
-
-  radioInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#153131',
   },
   errorText: {
     color: "#FF3B30",
@@ -227,7 +202,26 @@ const styles = StyleSheet.create({
     gap: 12,
     marginTop: 32,
   },
-  button: {
-    flex: 1,
+  buttonA: {
+    width: "50%",
+    backgroundColor: "#C0DFA1"
+  },
+  buttonB: {
+    width: "50%",
+    backgroundColor: "#153131"
+  },
+  extraBox: {
+    marginTop: 40,
+    backgroundColor: "#e9e6ec",
+    borderRadius: 12,
+    padding: 12,
+    flexDirection: 'row'
+  },
+  extraBoxText: {
+    marginLeft: 10,
+    fontSize: 14,
+  },
+  icon: {
+    marginTop: 5
   }
 });
